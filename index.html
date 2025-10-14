@@ -4,13 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventory & Billing (Firebase)</title>
+
+  <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
+    /* Thermal print style (58mm/80mm friendly) */
     .thermal .bill {
       width: 58mm;
-      font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
     .thermal .bill * { line-height: 1.2; }
+
+    /* Normal print style (A4) */
     .normal .bill { width: 100%; max-width: 700px; }
 
     @media print {
@@ -19,44 +25,40 @@
       #printArea { position: absolute; left: 0; top: 0; width: 100%; }
     }
   </style>
+
+  <!-- Firebase v9 compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
-  <!-- Login -->
+  <!-- LOGIN SCREEN -->
   <section id="authView" class="max-w-md mx-auto p-6 mt-16 bg-white rounded-xl shadow hidden">
     <h1 class="text-2xl font-bold mb-4">Login</h1>
     <div class="space-y-2">
       <input id="email" type="email" placeholder="Email" class="w-full border p-2 rounded" />
       <input id="password" type="password" placeholder="Password" class="w-full border p-2 rounded" />
-      <button id="loginBtn" class="w-full py-2 bg-blue-600 text-white rounded">Sign in</button>
-      <p class="text-xs text-gray-500 text-center">Only registered Firebase users can log in.</p>
+      <button id="loginBtn" class="w-full py-2 bg-blue-600 text-white rounded">Sign In</button>
+      <p id="authError" class="text-xs text-red-600 hidden"></p>
+      <p class="text-xs text-gray-500">Users are created in Firebase Console.</p>
     </div>
   </section>
 
-  <!-- App -->
+  <!-- APP SECTION -->
   <section id="appView" class="p-4 max-w-7xl mx-auto hidden">
     <header class="flex items-center justify-between mb-4">
       <div>
-        <h2 class="text-xl font-semibold" id="storeName" contenteditable="true" onblur="saveStoreDetail('storeName', this.textContent)">
-          Techverse Solutions
-        </h2>
-        <p id="storeAddress" contenteditable="true" onblur="saveStoreDetail('storeAddress', this.textContent)" class="text-sm text-gray-500">
-          Patel Nagar, Fatehpur 212601
-        </p>
-        <p id="storeContact" contenteditable="true" onblur="saveStoreDetail('storeContact', this.textContent)" class="text-sm text-gray-500">
-          +91 8948581236
-        </p>
+        <h2 class="text-xl font-semibold">Inventory & Billing</h2>
+        <p id="userBadge" class="text-sm text-gray-600"></p>
       </div>
       <div class="flex items-center gap-2">
-        <p id="userBadge" class="text-sm text-gray-600"></p>
         <button id="logoutBtn" class="px-3 py-1 border rounded">Logout</button>
       </div>
     </header>
 
     <div class="grid md:grid-cols-3 gap-4">
-      <!-- Dashboard -->
+      <!-- DASHBOARD -->
       <section class="md:col-span-2 bg-white p-4 rounded-xl shadow">
         <h3 class="font-semibold mb-3">Dashboard</h3>
         <div class="grid grid-cols-3 gap-3">
@@ -65,195 +67,250 @@
           <div class="p-3 border rounded"><div class="text-xs text-gray-500">Products</div><div id="productCount" class="text-lg font-bold">0</div></div>
         </div>
 
-        <!-- Billing -->
+        <!-- BILLING -->
         <div class="mt-6">
           <div class="flex items-center justify-between">
             <h4 class="font-medium">Billing</h4>
-            <div class="text-sm text-gray-500">Payment: 
+            <div class="text-sm text-gray-500">
+              Payment:
               <select id="paymentMode" class="border rounded p-1">
                 <option value="cash">Cash</option>
                 <option value="online">Online</option>
               </select>
             </div>
           </div>
+
           <div id="billLines" class="mt-3 space-y-2"></div>
           <div class="flex gap-2 items-center mt-2">
             <button id="addLineBtn" class="px-3 py-1 border rounded">Add item</button>
-            <input id="discount" type="number" min="0" step="0.01" placeholder="Discount" class="w-32 p-2 border rounded" />
+            <input id="discount" type="number" placeholder="Discount" class="w-32 p-2 border rounded" />
             <button id="createBillBtn" class="ml-auto px-4 py-2 bg-green-600 text-white rounded">Create Bill</button>
             <button id="printBillBtn" class="px-3 py-2 border rounded">Print</button>
           </div>
         </div>
       </section>
 
-      <!-- Inventory -->
-      <aside class="bg-white p-4 rounded-xl shadow">
+      <!-- INVENTORY + SETTINGS -->
+      <aside class="bg-white p-4 rounded-xl shadow space-y-4">
         <div class="flex items-center justify-between">
           <h4 class="font-semibold">Inventory</h4>
+          <span id="printModeChip" class="text-xs px-2 py-1 rounded bg-gray-100 border">print: -</span>
         </div>
         <ul id="inventoryList" class="mt-3 max-h-96 overflow-auto divide-y"></ul>
 
-        <!-- Allow ALL users to add -->
-        <div id="adminAddProduct" class="mt-4">
+        <!-- ADD PRODUCT -->
+        <div id="addProductBox" class="mt-4">
           <h5 class="font-medium mb-2">Add Product</h5>
           <div class="space-y-2">
             <input id="pSku" placeholder="SKU" class="w-full p-2 border rounded" />
             <input id="pName" placeholder="Product name" class="w-full p-2 border rounded" />
             <div class="grid grid-cols-3 gap-2">
-              <input id="pQty" type="number" min="0" placeholder="Qty" class="p-2 border rounded" />
-              <input id="pCost" type="number" min="0" step="0.01" placeholder="Cost" class="p-2 border rounded" />
-              <input id="pPrice" type="number" min="0" step="0.01" placeholder="Price" class="p-2 border rounded" />
+              <input id="pQty" type="number" placeholder="Qty" class="p-2 border rounded" />
+              <input id="pCost" type="number" placeholder="Cost" class="p-2 border rounded" />
+              <input id="pPrice" type="number" placeholder="Price" class="p-2 border rounded" />
             </div>
             <label class="flex items-center gap-2 text-sm"><input id="pInfinite" type="checkbox" /> Infinite stock</label>
             <button id="addProductBtn" class="w-full py-2 bg-indigo-600 text-white rounded">Add Product</button>
+          </div>
+        </div>
+
+        <!-- STORE SETTINGS -->
+        <div id="storeSettings" class="mt-6">
+          <h5 class="font-semibold mb-2">Store Settings (Shared)</h5>
+          <div class="space-y-2">
+            <input id="storeName" class="w-full p-2 border rounded" placeholder="Store Name" />
+            <textarea id="storeAddress" class="w-full p-2 border rounded" rows="2" placeholder="Address"></textarea>
+            <input id="storeContact" class="w-full p-2 border rounded" placeholder="Contact (phone/email)" />
+            <input id="logoUrl" class="w-full p-2 border rounded" placeholder="Logo URL (optional)" />
+            <label class="text-sm">Print Mode</label>
+            <select id="printMode" class="w-full p-2 border rounded">
+              <option value="thermal">Thermal</option>
+              <option value="normal">Normal</option>
+            </select>
+            <button id="saveSettingsBtn" class="w-full py-2 bg-gray-800 text-white rounded">Save Settings</button>
+            <p id="settingsInfo" class="text-xs text-gray-500"></p>
           </div>
         </div>
       </aside>
     </div>
   </section>
 
-  <!-- Print area -->
+  <!-- PRINT AREA -->
   <div id="printArea" class="p-4">
     <div id="billContainer" class="bill mx-auto bg-white p-4 rounded shadow"></div>
   </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
-  authDomain: "techverse-ca88a.firebaseapp.com",
-  projectId: "techverse-ca88a",
-  storageBucket: "techverse-ca88a.firebasestorage.app",
-  messagingSenderId: "288969741715",
-  appId: "1:288969741715:web:03ddb8b82da9224e234466",
-  measurementId: "G-33XTL4HJR9"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+/* ========== Firebase Setup ========== */
+ const firebaseConfig = {
+    apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
+    authDomain: "techverse-ca88a.firebaseapp.com",
+    databaseURL: "https://techverse-ca88a-default-rtdb.firebaseio.com",
+    projectId: "techverse-ca88a",
+    storageBucket: "techverse-ca88a.firebasestorage.app",
+    messagingSenderId: "288969741715",
+    appId: "1:288969741715:web:03ddb8b82da9224e234466",
+    measurementId: "G-33XTL4HJR9"
+  };
 
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
+/* ====== Helpers ====== */
 const $ = (id) => document.getElementById(id);
 function currency(n){ return `₹${(Number(n)||0).toFixed(2)}`; }
+function todayStart(){ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 
+/* ====== State ====== */
+let currentUser = null;
 let currentUserDoc = null;
+let settingsDoc = {
+  printMode: 'thermal',
+  storeName: 'Your Store',
+  storeAddress: '',
+  storeContact: '',
+  logoUrl: ''
+};
 let products = [];
 let sales = [];
 
-// ===== Login =====
-$('loginBtn').addEventListener('click', async () => {
+/* ====== Auth ====== */
+$('loginBtn').addEventListener('click', async ()=>{
+  const email = $('email').value.trim();
+  const pass = $('password').value.trim();
   try {
-    await auth.signInWithEmailAndPassword($('email').value, $('password').value);
-  } catch (e) { alert('Login failed: ' + e.message); }
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e){ $('authError').textContent = e.message; $('authError').classList.remove('hidden'); }
 });
-$('logoutBtn').addEventListener('click', () => auth.signOut());
+$('logoutBtn').addEventListener('click', ()=>auth.signOut());
 
-auth.onAuthStateChanged(async (u) => {
-  if (!u) {
-    $('authView').classList.remove('hidden');
-    $('appView').classList.add('hidden');
-    return;
-  }
-  $('authView').classList.add('hidden');
-  $('appView').classList.remove('hidden');
+auth.onAuthStateChanged(async(u)=>{
+  if(!u){ $('authView').classList.remove('hidden'); $('appView').classList.add('hidden'); return; }
+  $('authView').classList.add('hidden'); $('appView').classList.remove('hidden');
   $('userBadge').textContent = u.email;
+  currentUser = u;
 
-  db.collection('products').where('deleted','!=',true).onSnapshot((qs) => {
-    products = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderInventory();
-    $('productCount').textContent = products.length;
-    rebuildBillLinesOptions();
+  const uref = db.collection('users').doc(u.uid);
+  const usnap = await uref.get();
+  if(!usnap.exists) await uref.set({email:u.email,role:'user'}, {merge:true});
+  currentUserDoc = (await uref.get()).data();
+
+  db.collection('meta').doc('settings').onSnapshot(s=>{
+    if(s.exists) settingsDoc={...settingsDoc,...s.data()};
+    $('storeName').value=settingsDoc.storeName; $('storeAddress').value=settingsDoc.storeAddress;
+    $('storeContact').value=settingsDoc.storeContact; $('logoUrl').value=settingsDoc.logoUrl;
+    $('printMode').value=settingsDoc.printMode; updatePrintModeUI();
   });
 
-  db.collection('sales').orderBy('createdAt','desc').onSnapshot((qs) => {
-    sales = qs.docs.map(d => d.data());
-    const total = sales.reduce((a,b)=>a+(b.total||0),0);
-    $('totalSales').textContent = currency(total);
+  db.collection('products').onSnapshot(q=>{
+    products=q.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.deleted);
+    renderInventory(); rebuildBillLinesOptions(); $('productCount').textContent=products.length;
+  });
+
+  db.collection('sales').orderBy('createdAt','desc').limit(500).onSnapshot(q=>{
+    sales=q.docs.map(d=>({id:d.id,...d.data()})); renderDashboard();
   });
 });
 
-// ===== Store Details =====
-function saveStoreDetail(key, val){ localStorage.setItem(key, val); }
-function getStoreDetail(key, def){ return localStorage.getItem(key)||def; }
+/* ====== Print Mode ====== */
+function updatePrintModeUI(){
+  const area=$('printArea'); area.classList.remove('thermal','normal');
+  area.classList.add(settingsDoc.printMode==='normal'?'normal':'thermal');
+  $('printModeChip').textContent=`print: ${settingsDoc.printMode}`;
+}
 
-// ===== Inventory =====
+/* ====== Save Settings ====== */
+$('saveSettingsBtn').addEventListener('click',async()=>{
+  const data={
+    storeName:$('storeName').value.trim(),
+    storeAddress:$('storeAddress').value.trim(),
+    storeContact:$('storeContact').value.trim(),
+    logoUrl:$('logoUrl').value.trim(),
+    printMode:$('printMode').value
+  };
+  await db.collection('meta').doc('settings').set(data,{merge:true});
+  $('settingsInfo').textContent='Saved ✓'; setTimeout(()=>$('settingsInfo').textContent='',1500);
+});
+
+/* ====== Inventory ====== */
 function renderInventory(){
-  const list = $('inventoryList');
-  list.innerHTML = '';
+  const list=$('inventoryList'); list.innerHTML='';
   products.forEach(p=>{
     const li=document.createElement('li');
-    li.className='py-2 flex items-start justify-between gap-2';
-    li.innerHTML=`
-      <div>
-        <div class="font-medium">${p.name}</div>
-        <div class="text-xs text-gray-500">Qty: ${p.quantity||0} • ₹${p.price||0}</div>
-      </div>
-    `;
+    li.className='py-2 flex justify-between text-sm';
+    li.innerHTML=`<div><b>${p.name}</b><br><span class="text-xs text-gray-500">SKU:${p.sku||'-'} | Qty:${p.quantity||0} | ₹${p.price||0}</span></div>
+    <div class="flex gap-1">
+    <button data-id="${p.id}" data-action="plus10" class="border px-1 text-xs">+10</button>
+    <button data-id="${p.id}" data-action="delete" class="border px-1 text-xs">Del</button></div>`;
     list.appendChild(li);
   });
 }
-
-$('addProductBtn').addEventListener('click', async () => {
-  const p = {
-    sku:$('pSku').value, name:$('pName').value,
-    quantity:Number($('pQty').value||0),
-    cost:Number($('pCost').value||0),
-    price:Number($('pPrice').value||0),
-    infinite:$('pInfinite').checked,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-  };
-  if(!p.name) return alert('Enter name');
+$('addProductBtn').addEventListener('click',async()=>{
+  const p={sku:$('pSku').value,name:$('pName').value,quantity:+$('pQty').value,
+  cost:+$('pCost').value,price:+$('pPrice').value,infinite:$('pInfinite').checked,
+  createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+  if(!p.name)return alert('Product name required');
   await db.collection('products').add(p);
   $('pSku').value=$('pName').value=$('pQty').value=$('pCost').value=$('pPrice').value='';
 });
-
-// ===== Billing =====
-const billLinesEl = $('billLines');
-function addLine(){
-  const div=document.createElement('div');
-  div.className='flex gap-2';
-  div.innerHTML=`
-    <select class="prodSel p-2 border rounded flex-1">
-      ${products.map(p=>`<option value="${p.id}">${p.name} ₹${p.price}</option>`).join('')}
-    </select>
-    <input type="number" class="qtySel w-24 p-2 border rounded" min="1" value="1" />
-    <button class="rmLine px-2 border rounded">x</button>
-  `;
-  billLinesEl.appendChild(div);
-}
-$('addLineBtn').addEventListener('click', addLine);
-addLine();
-
-$('createBillBtn').addEventListener('click', async ()=>{
-  const items=[...billLinesEl.querySelectorAll('div')].map(div=>{
-    const id=div.querySelector('.prodSel').value;
-    const qty=+div.querySelector('.qtySel').value;
-    const p=products.find(x=>x.id===id)||{};
-    return {name:p.name, qty, price:p.price, total:qty*p.price};
-  }).filter(i=>i.name);
-  const discount=+($('discount').value||0);
-  const total=items.reduce((a,b)=>a+b.total,0)-discount;
-  await db.collection('sales').add({
-    items,total,discount,createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-  renderBill(items,total,discount);
+$('inventoryList').addEventListener('click',async e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  const id=b.dataset.id,a=b.dataset.action,ref=db.collection('products').doc(id);
+  if(a==='plus10')await ref.update({quantity:firebase.firestore.FieldValue.increment(10)});
+  if(a==='delete')await ref.update({deleted:true});
 });
 
-function renderBill(items,total,discount){
-  const el=$('billContainer');
-  const name=getStoreDetail('storeName','Techverse Solutions');
-  const addr=getStoreDetail('storeAddress','Patel Nagar, Fatehpur');
-  const contact=getStoreDetail('storeContact','+91 8948581236');
-  el.innerHTML=`
-    <div class="text-center">
-      <h2>${name}</h2>
-      <p>${addr}</p><p>${contact}</p>
-      <hr/>
-      <table class="w-full text-sm"><tbody>
-      ${items.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.total}</td></tr>`).join('')}
-      </tbody></table>
-      <hr/><p>Discount: ${discount}</p><h3>Total: ${total}</h3>
-    </div>`;
+/* ====== Billing ====== */
+const billLinesEl=$('billLines');
+function rebuildBillLinesOptions(){
+  [...billLinesEl.querySelectorAll('select')].forEach(sel=>{
+    const val=sel.value;
+    sel.innerHTML='<option value="">Select</option>'+products.map(p=>`<option value="${p.id}" ${p.id===val?'selected':''}>${p.name}</option>`).join('');
+  });
 }
+function addLine(){
+  const d=document.createElement('div');
+  d.className='flex gap-2';
+  d.innerHTML=`<select class="border p-1 flex-1"></select><input type="number" value="1" class="w-16 border p-1"/><button class="border px-2">X</button>`;
+  billLinesEl.appendChild(d); rebuildBillLinesOptions();
+}
+$('addLineBtn').addEventListener('click',addLine); addLine();
+
+billLinesEl.addEventListener('click',e=>{if(e.target.tagName==='BUTTON')e.target.closest('div').remove();});
+
+$('createBillBtn').addEventListener('click',async()=>{
+  const items=[...billLinesEl.querySelectorAll('div')].map(r=>{
+    const id=r.querySelector('select').value,qty=+r.querySelector('input').value;
+    const p=products.find(x=>x.id===id)||{}; return {name:p.name,price:+p.price,qty};
+  }).filter(x=>x.name);
+  let total=items.reduce((a,b)=>a+b.price*b.qty,0),discount=+$('discount').value||0;
+  total-=discount;
+  await db.collection('sales').add({items,total,discount,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  renderBill(items,total,discount);
+  alert('Bill saved!');
+});
+
 $('printBillBtn').addEventListener('click',()=>window.print());
+
+function renderBill(items,total,discount){
+  const el=$('billContainer'),d=new Date().toLocaleString();
+  el.innerHTML=`
+  <div class="text-center">
+    ${settingsDoc.logoUrl?`<img src="${settingsDoc.logoUrl}" class="mx-auto max-h-12 mb-2"/>`:''}
+    <b>${settingsDoc.storeName}</b><br>
+    <small>${settingsDoc.storeAddress}</small><br>
+    <small>${settingsDoc.storeContact}</small><br>
+    <small>${d}</small>
+  </div><hr>
+  <table class="w-full text-xs">
+  <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+  ${items.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.price*i.qty}</td></tr>`).join('')}
+  </table><hr>
+  <div class="flex justify-between text-sm"><span>Discount</span><span>${discount}</span></div>
+  <div class="flex justify-between font-bold"><span>Total</span><span>${total}</span></div>
+  <p class="text-center text-xs mt-2">Thank you!</p>`;
+}
 </script>
 </body>
 </html>
