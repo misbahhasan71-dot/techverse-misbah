@@ -4,17 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventory & Billing (Firebase)</title>
-  <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Thermal print style (58mm/80mm friendly) */
     .thermal .bill {
-      width: 58mm; /* change to 80mm if needed */
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      width: 58mm;
+      font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
     }
     .thermal .bill * { line-height: 1.2; }
-
-    /* Normal print style (A4-friendly) */
     .normal .bill { width: 100%; max-width: 700px; }
 
     @media print {
@@ -23,7 +19,6 @@
       #printArea { position: absolute; left: 0; top: 0; width: 100%; }
     }
   </style>
-  <!-- Firebase v9 compat SDKs (easier in a single HTML file) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -36,7 +31,7 @@
       <input id="email" type="email" placeholder="Email" class="w-full border p-2 rounded" />
       <input id="password" type="password" placeholder="Password" class="w-full border p-2 rounded" />
       <button id="loginBtn" class="w-full py-2 bg-blue-600 text-white rounded">Sign in</button>
-      <p class="text-xs text-gray-500">Users are created by Admin (not hard-coded). Credentials are never stored in code.</p>
+      <p class="text-xs text-gray-500 text-center">Only registered Firebase users can log in.</p>
     </div>
   </section>
 
@@ -44,17 +39,21 @@
   <section id="appView" class="p-4 max-w-7xl mx-auto hidden">
     <header class="flex items-center justify-between mb-4">
       <div>
-        <h2 class="text-xl font-semibold">Inventory & Billing</h2>
-        <p id="userBadge" class="text-sm text-gray-600"></p>
+        <h2 class="text-xl font-semibold" id="storeName" contenteditable="true" onblur="saveStoreDetail('storeName', this.textContent)">
+          Techverse Solutions
+        </h2>
+        <p id="storeAddress" contenteditable="true" onblur="saveStoreDetail('storeAddress', this.textContent)" class="text-sm text-gray-500">
+          Patel Nagar, Fatehpur 212601
+        </p>
+        <p id="storeContact" contenteditable="true" onblur="saveStoreDetail('storeContact', this.textContent)" class="text-sm text-gray-500">
+          +91 8948581236
+        </p>
       </div>
       <div class="flex items-center gap-2">
+        <p id="userBadge" class="text-sm text-gray-600"></p>
         <button id="logoutBtn" class="px-3 py-1 border rounded">Logout</button>
       </div>
     </header>
-
-    <div id="freezeNotice" class="hidden mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">
-      Your account is <b>frozen</b>. Contact Admin to regain access.
-    </div>
 
     <div class="grid md:grid-cols-3 gap-4">
       <!-- Dashboard -->
@@ -91,13 +90,12 @@
       <aside class="bg-white p-4 rounded-xl shadow">
         <div class="flex items-center justify-between">
           <h4 class="font-semibold">Inventory</h4>
-          <span id="printModeChip" class="text-xs px-2 py-1 rounded bg-gray-100 border">print: -</span>
         </div>
         <ul id="inventoryList" class="mt-3 max-h-96 overflow-auto divide-y"></ul>
 
-        <!-- Admin: Add Product -->
-        <div id="adminAddProduct" class="mt-4 hidden">
-          <h5 class="font-medium mb-2">Add Product (Admin)</h5>
+        <!-- Allow ALL users to add -->
+        <div id="adminAddProduct" class="mt-4">
+          <h5 class="font-medium mb-2">Add Product</h5>
           <div class="space-y-2">
             <input id="pSku" placeholder="SKU" class="w-full p-2 border rounded" />
             <input id="pName" placeholder="Product name" class="w-full p-2 border rounded" />
@@ -112,59 +110,14 @@
         </div>
       </aside>
     </div>
-
-    <!-- Admin Panel -->
-    <section id="adminPanel" class="bg-white p-4 rounded-xl shadow mt-4 hidden">
-      <h3 class="font-semibold mb-3">Admin Panel</h3>
-      <div class="grid md:grid-cols-3 gap-4">
-        <div class="space-y-2">
-          <h4 class="font-medium">Global Settings</h4>
-          <label class="text-sm">Logo URL</label>
-          <input id="logoUrl" class="w-full p-2 border rounded" placeholder="https://..." />
-          <label class="text-sm">Print Mode</label>
-          <select id="printMode" class="w-full p-2 border rounded">
-            <option value="thermal">Thermal</option>
-            <option value="normal">Normal</option>
-          </select>
-          <button id="saveSettingsBtn" class="w-full py-2 bg-gray-800 text-white rounded">Save Settings</button>
-        </div>
-        <div class="space-y-2">
-          <h4 class="font-medium">Invite / Queue User</h4>
-          <p class="text-xs text-gray-500">Creates a pending request. Create Auth user via Admin SDK on server.</p>
-          <input id="newUserEmail" type="email" placeholder="user@example.com" class="w-full p-2 border rounded" />
-          <select id="newUserRole" class="w-full p-2 border rounded">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button id="queueUserBtn" class="w-full py-2 bg-blue-600 text-white rounded">Queue User</button>
-
-          <hr class="my-3" />
-
-          <h4 class="font-medium">Create User (Admin)</h4>
-          <p class="text-xs text-gray-500">Creates a Firebase Auth user using a secondary app (keeps you logged in), then writes <code>/users/{uid}</code> with role & frozen=false.</p>
-          <input id="cuEmail" type="email" placeholder="newuser@example.com" class="w-full p-2 border rounded" />
-          <input id="cuPassword" type="password" placeholder="Temporary Password" class="w-full p-2 border rounded" />
-          <select id="cuRole" class="w-full p-2 border rounded">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button id="createUserBtn" class="w-full py-2 bg-emerald-600 text-white rounded">Create User</button>
-        </div>
-        <div class="space-y-2">
-          <h4 class="font-medium">Users</h4>
-          <ul id="usersList" class="max-h-60 overflow-auto divide-y"></ul>
-        </div>
-      </div>
-    </section>
   </section>
 
-  <!-- Hidden print area -->
+  <!-- Print area -->
   <div id="printArea" class="p-4">
     <div id="billContainer" class="bill mx-auto bg-white p-4 rounded shadow"></div>
   </div>
 
 <script>
-// ====== Firebase Setup ======
 const firebaseConfig = {
   apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
   authDomain: "techverse-ca88a.firebaseapp.com",
@@ -178,62 +131,31 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ====== DOM Helpers ======
 const $ = (id) => document.getElementById(id);
 function currency(n){ return `₹${(Number(n)||0).toFixed(2)}`; }
-function todayStart(){ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 
-// ====== State ======
-let currentUser = null;
-let currentUserDoc = null; // {role, frozen, shopName, billingAddress}
-let settingsDoc = { printMode: 'thermal', logoUrl: '' };
+let currentUserDoc = null;
 let products = [];
 let sales = [];
-let usersCache = [];
 
-// ====== Auth UI ======
+// ===== Login =====
 $('loginBtn').addEventListener('click', async () => {
-  const email = $('email').value.trim();
-  const pass = $('password').value.trim();
   try {
-    await auth.signInWithEmailAndPassword(email, pass);
-  } catch (e) {
-    alert('Login failed: ' + e.message);
-  }
+    await auth.signInWithEmailAndPassword($('email').value, $('password').value);
+  } catch (e) { alert('Login failed: ' + e.message); }
 });
-
 $('logoutBtn').addEventListener('click', () => auth.signOut());
 
-// ====== Auth State Listener ======
 auth.onAuthStateChanged(async (u) => {
-  currentUser = u;
   if (!u) {
-    // show login
     $('authView').classList.remove('hidden');
     $('appView').classList.add('hidden');
     return;
   }
-  // show app
   $('authView').classList.add('hidden');
   $('appView').classList.remove('hidden');
-  $('userBadge').textContent = `${u.email}`;
+  $('userBadge').textContent = u.email;
 
-  // ensure user doc exists
-  const uref = db.collection('users').doc(u.uid);
-  const usnap = await uref.get();
-  if (!usnap.exists) {
-    await uref.set({ email: u.email, role: 'user', frozen: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-  }
-  currentUserDoc = (await uref.get()).data();
-  $('userBadge').textContent = `${u.email} ${currentUserDoc.role === 'admin' ? '(Admin)' : ''}`;
-
-  // Listen settings
-  db.collection('meta').doc('settings').onSnapshot((snap) => {
-    if (snap.exists) settingsDoc = snap.data();
-    updatePrintModeUI();
-  });
-
-  // Listen products
   db.collection('products').where('deleted','!=',true).onSnapshot((qs) => {
     products = qs.docs.map(d => ({ id: d.id, ...d.data() }));
     renderInventory();
@@ -241,256 +163,97 @@ auth.onAuthStateChanged(async (u) => {
     rebuildBillLinesOptions();
   });
 
-  // Listen sales
-  db.collection('sales').orderBy('createdAt','desc').limit(500).onSnapshot((qs) => {
-    sales = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderDashboard();
+  db.collection('sales').orderBy('createdAt','desc').onSnapshot((qs) => {
+    sales = qs.docs.map(d => d.data());
+    const total = sales.reduce((a,b)=>a+(b.total||0),0);
+    $('totalSales').textContent = currency(total);
   });
-
-  // List users (admin)
-  if (currentUserDoc.role === 'admin') {
-    $('adminPanel').classList.remove('hidden');
-    $('adminAddProduct').classList.remove('hidden');
-    db.collection('users').onSnapshot(qs => {
-      usersCache = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderUsers();
-    });
-  } else {
-    $('adminPanel').classList.add('hidden');
-    $('adminAddProduct').classList.add('hidden');
-  }
-
-  // Freeze check
-  updateFreezeUI();
 });
 
-function updateFreezeUI(){
-  const frozen = !!(currentUserDoc && currentUserDoc.frozen);
-  $('freezeNotice').classList.toggle('hidden', !frozen);
-  // disable billing buttons when frozen
-  $('createBillBtn').disabled = frozen;
-  $('addLineBtn').disabled = frozen;
-}
+// ===== Store Details =====
+function saveStoreDetail(key, val){ localStorage.setItem(key, val); }
+function getStoreDetail(key, def){ return localStorage.getItem(key)||def; }
 
-// ====== Dashboard ======
-function renderDashboard(){
-  const t0 = sales.reduce((a,b)=> a + (b.total||0), 0);
-  $('totalSales').textContent = currency(t0);
-  const start = todayStart();
-  const todaySum = sales.filter(s => s.createdAt && s.createdAt.toDate && s.createdAt.toDate() >= start)
-                        .reduce((a,b)=> a + (b.total||0), 0);
-  $('todaysSales').textContent = currency(todaySum);
-}
-
-// ====== Inventory Render & Admin Add ======
+// ===== Inventory =====
 function renderInventory(){
   const list = $('inventoryList');
   list.innerHTML = '';
-  products.forEach(p => {
-    const li = document.createElement('li');
-    li.className = 'py-2 flex items-start justify-between gap-2';
-    li.innerHTML = `
+  products.forEach(p=>{
+    const li=document.createElement('li');
+    li.className='py-2 flex items-start justify-between gap-2';
+    li.innerHTML=`
       <div>
-        <div class="font-medium">${p.name} ${p.infinite ? '<span class=\"text-xs text-green-600\">(Infinite)</span>' : ''}</div>
-        <div class="text-xs text-gray-500">SKU: ${p.sku||'-'} • Qty: ${p.quantity ?? 0} • Price: ${currency(p.price||0)}</div>
+        <div class="font-medium">${p.name}</div>
+        <div class="text-xs text-gray-500">Qty: ${p.quantity||0} • ₹${p.price||0}</div>
       </div>
-      ${currentUserDoc.role==='admin' ? `
-      <div class="flex gap-2">
-        <button class="px-2 py-1 text-xs border rounded" data-action="plus10" data-id="${p.id}">+10</button>
-        <button class="px-2 py-1 text-xs border rounded" data-action="toggleInf" data-id="${p.id}">${p.infinite?'Finite':'Infinite'}</button>
-        <button class="px-2 py-1 text-xs border rounded" data-action="delete" data-id="${p.id}">Delete</button>
-      </div>`:''}
     `;
     list.appendChild(li);
   });
 }
 
-$('addProductBtn')?.addEventListener('click', async () => {
-  if (currentUserDoc.role !== 'admin') return alert('Admin only');
+$('addProductBtn').addEventListener('click', async () => {
   const p = {
-    sku: $('pSku').value.trim(),
-    name: $('pName').value.trim(),
-    quantity: Number($('pQty').value || 0),
-    cost: Number($('pCost').value || 0),
-    price: Number($('pPrice').value || 0),
-    infinite: $('pInfinite').checked,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    sku:$('pSku').value, name:$('pName').value,
+    quantity:Number($('pQty').value||0),
+    cost:Number($('pCost').value||0),
+    price:Number($('pPrice').value||0),
+    infinite:$('pInfinite').checked,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
   };
-  if (!p.name) return alert('Product name required');
+  if(!p.name) return alert('Enter name');
   await db.collection('products').add(p);
-  $('pSku').value = $('pName').value = $('pQty').value = $('pCost').value = $('pPrice').value = '';
-  $('pInfinite').checked = false;
+  $('pSku').value=$('pName').value=$('pQty').value=$('pCost').value=$('pPrice').value='';
 });
 
-$('inventoryList').addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const id = btn.dataset.id; const action = btn.dataset.action;
-  if (!id) return;
-  const ref = db.collection('products').doc(id);
-  if (action==='plus10') await ref.update({ quantity: firebase.firestore.FieldValue.increment(10) });
-  if (action==='toggleInf') {
-    const snap = await ref.get();
-    const inf = !!snap.data().infinite;
-    await ref.update({ infinite: !inf });
-  }
-  if (action==='delete') await ref.update({ deleted: true });
-});
-
-// ====== Billing ======
+// ===== Billing =====
 const billLinesEl = $('billLines');
-const lineTpl = () => {
-  const wrap = document.createElement('div');
-  wrap.className = 'flex gap-2';
-  wrap.innerHTML = `
+function addLine(){
+  const div=document.createElement('div');
+  div.className='flex gap-2';
+  div.innerHTML=`
     <select class="prodSel p-2 border rounded flex-1">
-      <option value="">Select product</option>
-      ${products.map(p => `<option value="${p.id}">${p.name} — ${currency(p.price||0)}</option>`).join('')}
+      ${products.map(p=>`<option value="${p.id}">${p.name} ₹${p.price}</option>`).join('')}
     </select>
     <input type="number" class="qtySel w-24 p-2 border rounded" min="1" value="1" />
-    <button class="rmLine px-2 py-1 border rounded">Remove</button>
+    <button class="rmLine px-2 border rounded">x</button>
   `;
-  return wrap;
-};
-
-function rebuildBillLinesOptions(){
-  [...billLinesEl.querySelectorAll('select.prodSel')].forEach(sel => {
-    const val = sel.value;
-    sel.innerHTML = `<option value="">Select product</option>` +
-      products.map(p => `<option value="${p.id}" ${p.id===val?'selected':''}>${p.name} — ${currency(p.price||0)}</option>`).join('');
-  });
+  billLinesEl.appendChild(div);
 }
-
-function addLine(){ billLinesEl.appendChild(lineTpl()); }
 $('addLineBtn').addEventListener('click', addLine);
-addLine(); // one line default
+addLine();
 
-billLinesEl.addEventListener('click', (e)=>{
-  if (e.target.classList.contains('rmLine')) {
-    e.target.closest('div').remove();
-  }
-});
-
-$('createBillBtn').addEventListener('click', async () => {
-  if (currentUserDoc?.frozen) return alert('Your account is frozen');
-  // collect items
-  const items = [...billLinesEl.querySelectorAll('div')].map(row => {
-    const pid = row.querySelector('select.prodSel').value;
-    const qty = Number(row.querySelector('input.qtySel').value||0);
-    const p = products.find(x=>x.id===pid) || {};
-    return { productId: pid, name: p.name, qty, price: Number(p.price||0), cost: Number(p.cost||0), infinite: !!p.infinite };
-  }).filter(x=>x.productId && x.qty>0);
-  if (!items.length) return alert('Add at least one item');
-
-  const discount = Number($('discount').value || 0);
-  const paymentMode = $('paymentMode').value;
-
-  let total = 0, totalCost = 0;
-  items.forEach(it => { total += it.qty*it.price; totalCost += it.qty*it.cost; });
-  total -= discount; const profit = total - totalCost;
-
-  // write sale
-  const saleDoc = await db.collection('sales').add({
-    items, total, totalCost, profit, discount, paymentMode,
-    createdBy: currentUser.uid,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    printMode: settingsDoc.printMode, logoUrl: settingsDoc.logoUrl || ''
+$('createBillBtn').addEventListener('click', async ()=>{
+  const items=[...billLinesEl.querySelectorAll('div')].map(div=>{
+    const id=div.querySelector('.prodSel').value;
+    const qty=+div.querySelector('.qtySel').value;
+    const p=products.find(x=>x.id===id)||{};
+    return {name:p.name, qty, price:p.price, total:qty*p.price};
+  }).filter(i=>i.name);
+  const discount=+($('discount').value||0);
+  const total=items.reduce((a,b)=>a+b.total,0)-discount;
+  await db.collection('sales').add({
+    items,total,discount,createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
-
-  // update stock
-  for (const it of items) {
-    if (it.infinite) continue;
-    const ref = db.collection('products').doc(it.productId);
-    await ref.update({ quantity: firebase.firestore.FieldValue.increment(-it.qty) });
-  }
-
-  // render bill and print
-  renderBill({ id: saleDoc.id, items, total, discount, paymentMode, logoUrl: settingsDoc.logoUrl });
-  alert('Invoice created: ' + saleDoc.id);
+  renderBill(items,total,discount);
 });
 
-$('printBillBtn').addEventListener('click', () => window.print());
-
-function renderBill({ id, items, total, discount, paymentMode, logoUrl }){
-  const el = $('billContainer');
-  const date = new Date().toLocaleString();
-  el.innerHTML = `
+function renderBill(items,total,discount){
+  const el=$('billContainer');
+  const name=getStoreDetail('storeName','Techverse Solutions');
+  const addr=getStoreDetail('storeAddress','Patel Nagar, Fatehpur');
+  const contact=getStoreDetail('storeContact','+91 8948581236');
+  el.innerHTML=`
     <div class="text-center">
-      ${logoUrl ? `<img src="${logoUrl}" alt="logo" class="mx-auto mb-2 max-h-12"/>` : ''}
-      <div class="font-bold">Invoice #${id.slice(-8)}</div>
-      <div class="text-xs">${date}</div>
-      <div class="text-xs">Payment: ${paymentMode}</div>
-    </div>
-    <hr class="my-2" />
-    <table class="w-full text-sm">
-      <thead><tr><th class="text-left">Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Amt</th></tr></thead>
-      <tbody>
-        ${items.map(it=>`<tr>
-          <td>${it.name||'-'}</td>
-          <td class="text-right">${it.qty}</td>
-          <td class="text-right">${it.price.toFixed(2)}</td>
-          <td class="text-right">${(it.qty*it.price).toFixed(2)}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    <hr class="my-2" />
-    <div class="flex justify-between text-sm"><span>Discount</span><span>${discount.toFixed(2)}</span></div>
-    <div class="flex justify-between font-bold"><span>Total</span><span>${total.toFixed(2)}</span></div>
-    <div class="text-center text-xs mt-2">Thank you!</div>
-  `;
+      <h2>${name}</h2>
+      <p>${addr}</p><p>${contact}</p>
+      <hr/>
+      <table class="w-full text-sm"><tbody>
+      ${items.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.total}</td></tr>`).join('')}
+      </tbody></table>
+      <hr/><p>Discount: ${discount}</p><h3>Total: ${total}</h3>
+    </div>`;
 }
-
-// ====== Admin: Settings, Users, Freeze ======$1
-
-// ---- Admin: Create Auth User via secondary app (keeps current admin session) ----
-let secondaryApp = null; let secondaryAuth = null;
-function ensureSecondary(){
-  if (!secondaryApp) {
-    try { secondaryApp = firebase.app('secondary'); }
-    catch(e){ secondaryApp = firebase.initializeApp(firebase.app().options, 'secondary'); }
-    secondaryAuth = secondaryApp.auth();
-  }
-}
-
-$('createUserBtn')?.addEventListener('click', async () => {
-  if (currentUserDoc.role !== 'admin') return alert('Admin only');
-  const email = $('cuEmail').value.trim();
-  const password = $('cuPassword').value.trim();
-  const role = $('cuRole').value;
-  if (!email || !password) return alert('Email and password required');
-  try {
-    ensureSecondary();
-    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
-    const uid = cred.user.uid;
-    // Send verification email to the new user
-    try { await cred.user.sendEmailVerification(); } catch(e) { console.warn('Verification email error:', e); }
-    await db.collection('users').doc(uid).set({
-      email, role, frozen: false,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    await secondaryAuth.signOut();
-    alert('User created and verification email sent: ' + email);
-    $('cuEmail').value=''; $('cuPassword').value='';
-    $('cuRole').value='user';
-  } catch (e) {
-    alert('Create failed: ' + (e.message||e));
-  }
-});
-
-$('usersList').addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const id = btn.dataset.id; const action = btn.dataset.action;
-  const ref = db.collection('users').doc(id);
-  if (action==='freeze') {
-    const cur = (await ref.get()).data();
-    await ref.update({ frozen: !cur.frozen });
-    if (currentUser.uid === id) currentUserDoc.frozen = !cur.frozen, updateFreezeUI();
-  }
-  if (action==='makeAdmin') await ref.update({ role: 'admin' });
-});
+$('printBillBtn').addEventListener('click',()=>window.print());
 </script>
-
-
 </body>
 </html>
