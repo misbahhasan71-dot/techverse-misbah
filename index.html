@@ -163,30 +163,19 @@
     <div id="billContainer" class="bill mx-auto bg-white p-4 rounded shadow"></div>
   </div>
 
-
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
-    authDomain: "techverse-ca88a.firebaseapp.com",
-    projectId: "techverse-ca88a",
-    storageBucket: "techverse-ca88a.firebasestorage.app",
-    messagingSenderId: "288969741715",
-    appId: "1:288969741715:web:03ddb8b82da9224e234466",
-    measurementId: "G-33XTL4HJR9"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
+<script>
+// ====== Firebase Setup ======
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 // ====== DOM Helpers ======
 const $ = (id) => document.getElementById(id);
