@@ -12,11 +12,11 @@
     /* Thermal print style (58mm/80mm friendly) */
     .thermal .bill {
       width: 58mm;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
     }
     .thermal .bill * { line-height: 1.2; }
 
-    /* Normal print style (A4) */
+    /* Normal print style (A4-friendly) */
     .normal .bill { width: 100%; max-width: 700px; }
 
     @media print {
@@ -33,19 +33,19 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-  <!-- LOGIN SCREEN -->
+  <!-- Login -->
   <section id="authView" class="max-w-md mx-auto p-6 mt-16 bg-white rounded-xl shadow hidden">
     <h1 class="text-2xl font-bold mb-4">Login</h1>
     <div class="space-y-2">
       <input id="email" type="email" placeholder="Email" class="w-full border p-2 rounded" />
       <input id="password" type="password" placeholder="Password" class="w-full border p-2 rounded" />
-      <button id="loginBtn" class="w-full py-2 bg-blue-600 text-white rounded">Sign In</button>
+      <button id="loginBtn" class="w-full py-2 bg-blue-600 text-white rounded">Sign in</button>
       <p id="authError" class="text-xs text-red-600 hidden"></p>
-      <p class="text-xs text-gray-500">Users are created in Firebase Console.</p>
+      <p class="text-xs text-gray-500">Users are created in Firebase Console. No passwords in code.</p>
     </div>
   </section>
 
-  <!-- APP SECTION -->
+  <!-- App -->
   <section id="appView" class="p-4 max-w-7xl mx-auto hidden">
     <header class="flex items-center justify-between mb-4">
       <div>
@@ -58,7 +58,7 @@
     </header>
 
     <div class="grid md:grid-cols-3 gap-4">
-      <!-- DASHBOARD -->
+      <!-- Dashboard -->
       <section class="md:col-span-2 bg-white p-4 rounded-xl shadow">
         <h3 class="font-semibold mb-3">Dashboard</h3>
         <div class="grid grid-cols-3 gap-3">
@@ -67,7 +67,7 @@
           <div class="p-3 border rounded"><div class="text-xs text-gray-500">Products</div><div id="productCount" class="text-lg font-bold">0</div></div>
         </div>
 
-        <!-- BILLING -->
+        <!-- Billing -->
         <div class="mt-6">
           <div class="flex items-center justify-between">
             <h4 class="font-medium">Billing</h4>
@@ -79,18 +79,17 @@
               </select>
             </div>
           </div>
-
           <div id="billLines" class="mt-3 space-y-2"></div>
           <div class="flex gap-2 items-center mt-2">
             <button id="addLineBtn" class="px-3 py-1 border rounded">Add item</button>
-            <input id="discount" type="number" placeholder="Discount" class="w-32 p-2 border rounded" />
+            <input id="discount" type="number" min="0" step="0.01" placeholder="Discount" class="w-32 p-2 border rounded" />
             <button id="createBillBtn" class="ml-auto px-4 py-2 bg-green-600 text-white rounded">Create Bill</button>
             <button id="printBillBtn" class="px-3 py-2 border rounded">Print</button>
           </div>
         </div>
       </section>
 
-      <!-- INVENTORY + SETTINGS -->
+      <!-- Inventory + Store Settings -->
       <aside class="bg-white p-4 rounded-xl shadow space-y-4">
         <div class="flex items-center justify-between">
           <h4 class="font-semibold">Inventory</h4>
@@ -98,23 +97,23 @@
         </div>
         <ul id="inventoryList" class="mt-3 max-h-96 overflow-auto divide-y"></ul>
 
-        <!-- ADD PRODUCT -->
+        <!-- Add Product -->
         <div id="addProductBox" class="mt-4">
           <h5 class="font-medium mb-2">Add Product</h5>
           <div class="space-y-2">
             <input id="pSku" placeholder="SKU" class="w-full p-2 border rounded" />
             <input id="pName" placeholder="Product name" class="w-full p-2 border rounded" />
             <div class="grid grid-cols-3 gap-2">
-              <input id="pQty" type="number" placeholder="Qty" class="p-2 border rounded" />
-              <input id="pCost" type="number" placeholder="Cost" class="p-2 border rounded" />
-              <input id="pPrice" type="number" placeholder="Price" class="p-2 border rounded" />
+              <input id="pQty" type="number" min="0" placeholder="Qty" class="p-2 border rounded" />
+              <input id="pCost" type="number" min="0" step="0.01" placeholder="Cost" class="p-2 border rounded" />
+              <input id="pPrice" type="number" min="0" step="0.01" placeholder="Price" class="p-2 border rounded" />
             </div>
             <label class="flex items-center gap-2 text-sm"><input id="pInfinite" type="checkbox" /> Infinite stock</label>
             <button id="addProductBtn" class="w-full py-2 bg-indigo-600 text-white rounded">Add Product</button>
           </div>
         </div>
 
-        <!-- STORE SETTINGS -->
+        <!-- Store Settings (shared for all users) -->
         <div id="storeSettings" class="mt-6">
           <h5 class="font-semibold mb-2">Store Settings (Shared)</h5>
           <div class="space-y-2">
@@ -135,13 +134,13 @@
     </div>
   </section>
 
-  <!-- PRINT AREA -->
+  <!-- Hidden print area -->
   <div id="printArea" class="p-4">
     <div id="billContainer" class="bill mx-auto bg-white p-4 rounded shadow"></div>
   </div>
 
 <script>
-/* ========== Firebase Setup ========== */
+/* ====== Firebase Setup ====== */
  const firebaseConfig = {
     apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
     authDomain: "techverse-ca88a.firebaseapp.com",
@@ -157,14 +156,13 @@
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
 
-/* ====== Helpers ====== */
+/* ====== DOM Helpers ====== */
 const $ = (id) => document.getElementById(id);
 function currency(n){ return `₹${(Number(n)||0).toFixed(2)}`; }
 function todayStart(){ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 
 /* ====== State ====== */
 let currentUser = null;
-let currentUserDoc = null;
 let settingsDoc = {
   printMode: 'thermal',
   storeName: 'Your Store',
@@ -175,141 +173,255 @@ let settingsDoc = {
 let products = [];
 let sales = [];
 
-/* ====== Auth ====== */
-$('loginBtn').addEventListener('click', async ()=>{
+/* ====== Auth UI ====== */
+$('loginBtn').addEventListener('click', async () => {
   const email = $('email').value.trim();
   const pass = $('password').value.trim();
+  $('authError').classList.add('hidden');
   try {
     await auth.signInWithEmailAndPassword(email, pass);
-  } catch(e){ $('authError').textContent = e.message; $('authError').classList.remove('hidden'); }
+  } catch (e) {
+    $('authError').textContent = e.message || 'Login failed';
+    $('authError').classList.remove('hidden');
+  }
 });
-$('logoutBtn').addEventListener('click', ()=>auth.signOut());
 
-auth.onAuthStateChanged(async(u)=>{
-  if(!u){ $('authView').classList.remove('hidden'); $('appView').classList.add('hidden'); return; }
-  $('authView').classList.add('hidden'); $('appView').classList.remove('hidden');
-  $('userBadge').textContent = u.email;
+$('logoutBtn').addEventListener('click', () => auth.signOut());
+
+/* ====== Auth State Listener ====== */
+auth.onAuthStateChanged(async (u) => {
   currentUser = u;
+  if (!u) {
+    $('authView').classList.remove('hidden');
+    $('appView').classList.add('hidden');
+    return;
+  }
+  $('authView').classList.add('hidden');
+  $('appView').classList.remove('hidden');
+  $('userBadge').textContent = u.email;
 
-  const uref = db.collection('users').doc(u.uid);
-  const usnap = await uref.get();
-  if(!usnap.exists) await uref.set({email:u.email,role:'user'}, {merge:true});
-  currentUserDoc = (await uref.get()).data();
+  // Ensure shared settings doc exists once
+  const settingsRef = db.collection('meta').doc('settings');
+  const sSnap = await settingsRef.get();
+  if (!sSnap.exists) {
+    await settingsRef.set({
+      storeName: 'Your Store',
+      storeAddress: '',
+      storeContact: '',
+      logoUrl: '',
+      printMode: 'thermal',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
 
-  db.collection('meta').doc('settings').onSnapshot(s=>{
-    if(s.exists) settingsDoc={...settingsDoc,...s.data()};
-    $('storeName').value=settingsDoc.storeName; $('storeAddress').value=settingsDoc.storeAddress;
-    $('storeContact').value=settingsDoc.storeContact; $('logoUrl').value=settingsDoc.logoUrl;
-    $('printMode').value=settingsDoc.printMode; updatePrintModeUI();
+  // Live settings
+  settingsRef.onSnapshot((snap) => {
+    if (snap.exists) settingsDoc = { ...settingsDoc, ...snap.data() };
+    $('storeName').value = settingsDoc.storeName || '';
+    $('storeAddress').value = settingsDoc.storeAddress || '';
+    $('storeContact').value = settingsDoc.storeContact || '';
+    $('logoUrl').value = settingsDoc.logoUrl || '';
+    $('printMode').value = settingsDoc.printMode || 'thermal';
+    updatePrintModeUI();
   });
 
-  db.collection('products').onSnapshot(q=>{
-    products=q.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.deleted);
-    renderInventory(); rebuildBillLinesOptions(); $('productCount').textContent=products.length;
-  });
+  // Products (query only non-deleted)
+  db.collection('products')
+    .where('deleted', '==', false)
+    .onSnapshot((qs) => {
+      products = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderInventory();
+      $('productCount').textContent = products.length;
+      rebuildBillLinesOptions();
+    }, (err)=>console.error(err));
 
-  db.collection('sales').orderBy('createdAt','desc').limit(500).onSnapshot(q=>{
-    sales=q.docs.map(d=>({id:d.id,...d.data()})); renderDashboard();
+  // Also load items that don’t have 'deleted' field (for backward compatibility)
+  db.collection('products')
+    .where('deleted', 'in', [false, null])
+    .onSnapshot(()=>{},()=>{}); // no-op, keeps index relaxed if needed
+
+  // Sales
+  db.collection('sales').orderBy('createdAt','desc').limit(500).onSnapshot((qs) => {
+    sales = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDashboard();
   });
 });
 
-/* ====== Print Mode ====== */
+/* ====== Print Mode UI ====== */
 function updatePrintModeUI(){
-  const area=$('printArea'); area.classList.remove('thermal','normal');
-  area.classList.add(settingsDoc.printMode==='normal'?'normal':'thermal');
-  $('printModeChip').textContent=`print: ${settingsDoc.printMode}`;
+  const area = $('printArea');
+  area.classList.remove('thermal','normal');
+  area.classList.add(settingsDoc.printMode === 'normal' ? 'normal' : 'thermal');
+  $('printModeChip').textContent = `print: ${settingsDoc.printMode}`;
 }
 
 /* ====== Save Settings ====== */
-$('saveSettingsBtn').addEventListener('click',async()=>{
-  const data={
-    storeName:$('storeName').value.trim(),
-    storeAddress:$('storeAddress').value.trim(),
-    storeContact:$('storeContact').value.trim(),
-    logoUrl:$('logoUrl').value.trim(),
-    printMode:$('printMode').value
+$('saveSettingsBtn').addEventListener('click', async () => {
+  const data = {
+    storeName: $('storeName').value.trim(),
+    storeAddress: $('storeAddress').value.trim(),
+    storeContact: $('storeContact').value.trim(),
+    logoUrl: $('logoUrl').value.trim(),
+    printMode: $('printMode').value
   };
-  await db.collection('meta').doc('settings').set(data,{merge:true});
-  $('settingsInfo').textContent='Saved ✓'; setTimeout(()=>$('settingsInfo').textContent='',1500);
+  await db.collection('meta').doc('settings').set(data, { merge: true });
+  $('settingsInfo').textContent = 'Saved ✓';
+  setTimeout(() => $('settingsInfo').textContent = '', 1500);
 });
+
+/* ====== Dashboard ====== */
+function renderDashboard(){
+  const total = sales.reduce((a,b)=> a + (Number(b.total)||0), 0);
+  $('totalSales').textContent = currency(total);
+  const start = todayStart();
+  const today = sales.filter(s => s.createdAt && s.createdAt.toDate && s.createdAt.toDate() >= start)
+                     .reduce((a,b)=> a + (Number(b.total)||0), 0);
+  $('todaysSales').textContent = currency(today);
+}
 
 /* ====== Inventory ====== */
 function renderInventory(){
-  const list=$('inventoryList'); list.innerHTML='';
+  const list = $('inventoryList');
+  list.innerHTML = '';
   products.forEach(p=>{
-    const li=document.createElement('li');
-    li.className='py-2 flex justify-between text-sm';
-    li.innerHTML=`<div><b>${p.name}</b><br><span class="text-xs text-gray-500">SKU:${p.sku||'-'} | Qty:${p.quantity||0} | ₹${p.price||0}</span></div>
-    <div class="flex gap-1">
-    <button data-id="${p.id}" data-action="plus10" class="border px-1 text-xs">+10</button>
-    <button data-id="${p.id}" data-action="delete" class="border px-1 text-xs">Del</button></div>`;
+    const li = document.createElement('li');
+    li.className = 'py-2 flex items-start justify-between gap-2';
+    li.innerHTML = `
+      <div>
+        <div class="font-medium">${p.name||'-'} ${p.infinite ? '<span class="text-xs text-green-600">(Infinite)</span>' : ''}</div>
+        <div class="text-xs text-gray-500">SKU: ${p.sku||'-'} • Qty: ${p.quantity ?? 0} • Price: ${currency(p.price||0)}</div>
+      </div>
+      <div class="flex gap-2">
+        <button class="px-2 py-1 text-xs border rounded" data-action="plus10" data-id="${p.id}">+10</button>
+        <button class="px-2 py-1 text-xs border rounded" data-action="toggleInf" data-id="${p.id}">${p.infinite?'Finite':'Infinite'}</button>
+        <button class="px-2 py-1 text-xs border rounded" data-action="delete" data-id="${p.id}">Delete</button>
+      </div>`;
     list.appendChild(li);
   });
 }
-$('addProductBtn').addEventListener('click',async()=>{
-  const p={sku:$('pSku').value,name:$('pName').value,quantity:+$('pQty').value,
-  cost:+$('pCost').value,price:+$('pPrice').value,infinite:$('pInfinite').checked,
-  createdAt:firebase.firestore.FieldValue.serverTimestamp()};
-  if(!p.name)return alert('Product name required');
+
+$('addProductBtn').addEventListener('click', async () => {
+  const p = {
+    sku: $('pSku').value.trim(),
+    name: $('pName').value.trim(),
+    quantity: Number($('pQty').value || 0),
+    cost: Number($('pCost').value || 0),
+    price: Number($('pPrice').value || 0),
+    infinite: $('pInfinite').checked,
+    deleted: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if (!p.name) return alert('Product name required');
   await db.collection('products').add(p);
-  $('pSku').value=$('pName').value=$('pQty').value=$('pCost').value=$('pPrice').value='';
+  $('pSku').value = $('pName').value = $('pQty').value = $('pCost').value = $('pPrice').value = '';
+  $('pInfinite').checked = false;
 });
-$('inventoryList').addEventListener('click',async e=>{
-  const b=e.target.closest('button'); if(!b)return;
-  const id=b.dataset.id,a=b.dataset.action,ref=db.collection('products').doc(id);
-  if(a==='plus10')await ref.update({quantity:firebase.firestore.FieldValue.increment(10)});
-  if(a==='delete')await ref.update({deleted:true});
+
+$('inventoryList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.dataset.id; const action = btn.dataset.action;
+  const ref = db.collection('products').doc(id);
+  if (action==='plus10') await ref.update({ quantity: firebase.firestore.FieldValue.increment(10) });
+  if (action==='toggleInf') {
+    const snap = await ref.get(); const inf = !!(snap.data() && snap.data().infinite);
+    await ref.update({ infinite: !inf });
+  }
+  if (action==='delete') await ref.update({ deleted: true });
 });
 
 /* ====== Billing ====== */
-const billLinesEl=$('billLines');
+const billLinesEl = $('billLines');
 function rebuildBillLinesOptions(){
-  [...billLinesEl.querySelectorAll('select')].forEach(sel=>{
-    const val=sel.value;
-    sel.innerHTML='<option value="">Select</option>'+products.map(p=>`<option value="${p.id}" ${p.id===val?'selected':''}>${p.name}</option>`).join('');
+  [...billLinesEl.querySelectorAll('select.prodSel')].forEach(sel => {
+    const val = sel.value || '';
+    sel.innerHTML = `<option value="">Select product</option>` +
+      products.map(p => `<option value="${p.id}" ${p.id===val?'selected':''}>${p.name} — ${currency(p.price||0)}</option>`).join('');
   });
 }
 function addLine(){
-  const d=document.createElement('div');
-  d.className='flex gap-2';
-  d.innerHTML=`<select class="border p-1 flex-1"></select><input type="number" value="1" class="w-16 border p-1"/><button class="border px-2">X</button>`;
-  billLinesEl.appendChild(d); rebuildBillLinesOptions();
+  const wrap = document.createElement('div');
+  wrap.className = 'flex gap-2';
+  wrap.innerHTML = `
+    <select class="prodSel p-2 border rounded flex-1"></select>
+    <input type="number" class="qtySel w-24 p-2 border rounded" min="1" value="1" />
+    <button class="rmLine px-2 py-1 border rounded">Remove</button>`;
+  billLinesEl.appendChild(wrap);
+  rebuildBillLinesOptions();
 }
-$('addLineBtn').addEventListener('click',addLine); addLine();
+$('addLineBtn').addEventListener('click', addLine);
+addLine();
 
-billLinesEl.addEventListener('click',e=>{if(e.target.tagName==='BUTTON')e.target.closest('div').remove();});
-
-$('createBillBtn').addEventListener('click',async()=>{
-  const items=[...billLinesEl.querySelectorAll('div')].map(r=>{
-    const id=r.querySelector('select').value,qty=+r.querySelector('input').value;
-    const p=products.find(x=>x.id===id)||{}; return {name:p.name,price:+p.price,qty};
-  }).filter(x=>x.name);
-  let total=items.reduce((a,b)=>a+b.price*b.qty,0),discount=+$('discount').value||0;
-  total-=discount;
-  await db.collection('sales').add({items,total,discount,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  renderBill(items,total,discount);
-  alert('Bill saved!');
+billLinesEl.addEventListener('click', (e)=>{
+  if (e.target.classList.contains('rmLine')) e.target.closest('div').remove();
 });
 
-$('printBillBtn').addEventListener('click',()=>window.print());
+$('createBillBtn').addEventListener('click', async () => {
+  const rows = [...billLinesEl.querySelectorAll('div')];
+  const items = rows.map(row => {
+    const pid = row.querySelector('select.prodSel').value;
+    const qty = Number(row.querySelector('input.qtySel').value||0);
+    const p = products.find(x=>x.id===pid) || {};
+    return pid ? { productId: pid, name: p.name||'-', qty, price: Number(p.price||0), cost: Number(p.cost||0), infinite: !!p.infinite } : null;
+  }).filter(Boolean).filter(x => x.qty>0);
 
-function renderBill(items,total,discount){
-  const el=$('billContainer'),d=new Date().toLocaleString();
-  el.innerHTML=`
-  <div class="text-center">
-    ${settingsDoc.logoUrl?`<img src="${settingsDoc.logoUrl}" class="mx-auto max-h-12 mb-2"/>`:''}
-    <b>${settingsDoc.storeName}</b><br>
-    <small>${settingsDoc.storeAddress}</small><br>
-    <small>${settingsDoc.storeContact}</small><br>
-    <small>${d}</small>
-  </div><hr>
-  <table class="w-full text-xs">
-  <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-  ${items.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.price*i.qty}</td></tr>`).join('')}
-  </table><hr>
-  <div class="flex justify-between text-sm"><span>Discount</span><span>${discount}</span></div>
-  <div class="flex justify-between font-bold"><span>Total</span><span>${total}</span></div>
-  <p class="text-center text-xs mt-2">Thank you!</p>`;
+  if (!items.length) return alert('Add at least one item');
+
+  const discount = Number($('discount').value || 0);
+  const paymentMode = $('paymentMode').value;
+
+  let total = 0, totalCost = 0;
+  items.forEach(it => { total += it.qty*it.price; totalCost += it.qty*it.cost; });
+  total -= discount; const profit = total - totalCost;
+
+  const saleDoc = await db.collection('sales').add({
+    items, total, totalCost, profit, discount, paymentMode,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    printMode: settingsDoc.printMode, logoUrl: settingsDoc.logoUrl || '',
+    storeName: settingsDoc.storeName || '', storeAddress: settingsDoc.storeAddress || '', storeContact: settingsDoc.storeContact || ''
+  });
+
+  for (const it of items) {
+    if (it.infinite) continue;
+    const ref = db.collection('products').doc(it.productId);
+    await ref.update({ quantity: firebase.firestore.FieldValue.increment(-it.qty) });
+  }
+
+  renderBill({ id: saleDoc.id, items, total, discount, paymentMode });
+  alert('Invoice created: ' + saleDoc.id);
+});
+
+$('printBillBtn').addEventListener('click', () => window.print());
+
+function renderBill({ id, items, total, discount, paymentMode }){
+  const el = $('billContainer');
+  const date = new Date().toLocaleString();
+  el.innerHTML = `
+    <div class="text-center">
+      ${settingsDoc.logoUrl ? `<img src="${settingsDoc.logoUrl}" alt="logo" class="mx-auto mb-2 max-h-12"/>` : ''}
+      <div class="font-bold">${settingsDoc.storeName || 'Your Store'}</div>
+      <div class="text-xs">${settingsDoc.storeAddress || ''}</div>
+      <div class="text-xs">${settingsDoc.storeContact || ''}</div>
+      <div class="text-xs mt-1">Invoice #${(id||'').slice(-8)} • ${date}</div>
+      <div class="text-xs">Payment: ${paymentMode}</div>
+    </div>
+    <hr class="my-2" />
+    <table class="w-full text-sm">
+      <thead><tr><th class="text-left">Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Amt</th></tr></thead>
+      <tbody>
+        ${items.map(it=>`<tr>
+          <td>${it.name||'-'}</td>
+          <td class="text-right">${it.qty}</td>
+          <td class="text-right">${(it.price||0).toFixed(2)}</td>
+          <td class="text-right">${(it.qty*(it.price||0)).toFixed(2)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <hr class="my-2" />
+    <div class="flex justify-between text-sm"><span>Discount</span><span>${(discount||0).toFixed(2)}</span></div>
+    <div class="flex justify-between font-bold"><span>Total</span><span>${(total||0).toFixed(2)}</span></div>
+    <div class="text-center text-xs mt-2">Thank you!</div>
+  `;
 }
 </script>
 </body>
