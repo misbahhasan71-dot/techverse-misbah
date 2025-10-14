@@ -1,0 +1,68 @@
+import * as functions from "firebase-functions";
+import admin from "firebase-admin";
+import nodemailer from "nodemailer";
+
+admin.initializeApp();
+const db = admin.firestore();
+
+/**
+ * Helper: check admin via custom claims.
+ * Set a claim once for your own admin user:
+ * admin.auth().setCustomUserClaims("ADMIN_UID", { isAdmin: true })
+ */
+function assertIsAdmin(context) {
+  if (!context.auth || !context.auth.token?.isAdmin) {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
+}
+
+export const createUserWithRole = functions.https.onCall(async (data, context) => {
+  assertIsAdmin(context);
+
+  const { email, password, role = "user" } = data || {};
+  if (!email || !password) {
+    throw new functions.https.HttpsError("invalid-argument", "Email and password required.");
+  }
+
+  // 1) Create Auth user
+  const userRecord = await admin.auth().createUser({ email, password, emailVerified: false });
+
+  // 2) OPTIONAL: set custom claims for RBAC
+  await admin.auth().setCustomUserClaims(userRecord.uid, { role, frozen: false });
+
+  // 3) Create Firestore profile
+  await db.collection("users").doc(userRecord.uid).set({
+    email,
+    role,
+    frozen: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  // 4) Send email verification (two options)
+  // A) Use Admin SDK to generate a link and send via SMTP (nodemailer)
+  const actionLink = await admin.auth().generateEmailVerificationLink(email, {
+    // Optional: add continueUrl to redirect after verification
+    // url: "https://yourapp.domain/login"
+  });
+
+  // Configure SMTP (use your provider; example uses Gmail - consider App Passwords)
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: "yourgmail@example.com", pass: "your-app-password" }
+  });
+
+  await transporter.sendMail({
+    from: '"TechVerse" <yourgmail@example.com>',
+    to: email,
+    subject: "Verify your email",
+    html: `
+      <p>Welcome to TechVerse!</p>
+      <p>Please verify your email by clicking the link below:</p>
+      <p><a href="${actionLink}">Verify Email</a></p>
+    `
+  });
+
+  // OR B) Install Firebase Extension "Email Trigger" and write to a collection instead.
+
+  return { uid: userRecord.uid, email };
+});
