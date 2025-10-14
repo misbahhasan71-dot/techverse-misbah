@@ -5,18 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventory & Billing (Firebase)</title>
 
-  <!-- Tailwind CSS (CDN) -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* Thermal print style (58mm/80mm friendly) */
     .thermal .bill {
-      width: 58mm;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      width: 58mm; /* change to 80mm if needed */
+      font-family: ui-monospace, monospace;
     }
     .thermal .bill * { line-height: 1.2; }
-
-    /* Normal print style (A4-friendly) */
     .normal .bill { width: 100%; max-width: 700px; }
 
     @media print {
@@ -26,22 +23,21 @@
     }
   </style>
 
-  <!-- Firebase v9 compat SDKs -->
+  <!-- Firebase v9 compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-  <!-- Login -->
-  <section id="authView" class="max-w-md mx-auto p-6 mt-16 bg-white rounded-xl shadow hidden">
+  <!-- Login (VISIBLE by default to avoid blank screen) -->
+  <section id="authView" class="max-w-md mx-auto p-6 mt-16 bg-white rounded-xl shadow">
     <h1 class="text-2xl font-bold mb-4">Login</h1>
     <div class="space-y-2">
       <input id="email" type="email" placeholder="Email" class="w-full border p-2 rounded" />
       <input id="password" type="password" placeholder="Password" class="w-full border p-2 rounded" />
       <button id="loginBtn" class="w-full py-2 bg-blue-600 text-white rounded">Sign in</button>
       <p id="authError" class="text-xs text-red-600 hidden"></p>
-      <p class="text-xs text-gray-500">Users are created in Firebase Console. No passwords in code.</p>
     </div>
   </section>
 
@@ -89,7 +85,7 @@
         </div>
       </section>
 
-      <!-- Inventory + Store Settings -->
+      <!-- Inventory + Settings -->
       <aside class="bg-white p-4 rounded-xl shadow space-y-4">
         <div class="flex items-center justify-between">
           <h4 class="font-semibold">Inventory</h4>
@@ -97,7 +93,7 @@
         </div>
         <ul id="inventoryList" class="mt-3 max-h-96 overflow-auto divide-y"></ul>
 
-        <!-- Add Product -->
+        <!-- Add Product (for any signed-in user) -->
         <div id="addProductBox" class="mt-4">
           <h5 class="font-medium mb-2">Add Product</h5>
           <div class="space-y-2">
@@ -113,7 +109,7 @@
           </div>
         </div>
 
-        <!-- Store Settings (shared for all users) -->
+        <!-- Store Settings (shared across all users) -->
         <div id="storeSettings" class="mt-6">
           <h5 class="font-semibold mb-2">Store Settings (Shared)</h5>
           <div class="space-y-2">
@@ -121,6 +117,14 @@
             <textarea id="storeAddress" class="w-full p-2 border rounded" rows="2" placeholder="Address"></textarea>
             <input id="storeContact" class="w-full p-2 border rounded" placeholder="Contact (phone/email)" />
             <input id="logoUrl" class="w-full p-2 border rounded" placeholder="Logo URL (optional)" />
+            <div class="grid grid-cols-2 gap-2">
+              <input id="gstNumber" class="w-full p-2 border rounded" placeholder="GST Number (optional)" />
+              <input id="taxPercent" type="number" class="w-full p-2 border rounded" placeholder="Tax % (e.g. 18)" />
+            </div>
+            <label class="flex items-center gap-2 text-sm">
+              <input id="includeTax" type="checkbox" />
+              Prices include Tax (GST)
+            </label>
             <label class="text-sm">Print Mode</label>
             <select id="printMode" class="w-full p-2 border rounded">
               <option value="thermal">Thermal</option>
@@ -134,15 +138,15 @@
     </div>
   </section>
 
-  <!-- Hidden print area -->
+  <!-- Print Area -->
   <div id="printArea" class="p-4">
     <div id="billContainer" class="bill mx-auto bg-white p-4 rounded shadow"></div>
   </div>
 
 <script>
-/* ====== Firebase Setup ====== */
- const firebaseConfig = {
-    apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
+/* ----------------------- Firebase Setup ----------------------- */
+const firebaseConfig = {
+ apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
     authDomain: "techverse-ca88a.firebaseapp.com",
     databaseURL: "https://techverse-ca88a-default-rtdb.firebaseio.com",
     projectId: "techverse-ca88a",
@@ -150,48 +154,39 @@
     messagingSenderId: "288969741715",
     appId: "1:288969741715:web:03ddb8b82da9224e234466",
     measurementId: "G-33XTL4HJR9"
-  };
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
-/* ====== DOM Helpers ====== */
-const $ = (id) => document.getElementById(id);
-function currency(n){ return `₹${(Number(n)||0).toFixed(2)}`; }
+/* ----------------------- Helpers & State ----------------------- */
+const $ = (id)=>document.getElementById(id);
+function currency(n){return `₹${(Number(n)||0).toFixed(2)}`;}
 function todayStart(){ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 
-/* ====== State ====== */
-let currentUser = null;
-let settingsDoc = {
-  printMode: 'thermal',
-  storeName: 'Your Store',
-  storeAddress: '',
-  storeContact: '',
-  logoUrl: ''
+let settingsDoc={
+  storeName:'',storeAddress:'',storeContact:'',
+  logoUrl:'',gstNumber:'',taxPercent:0,
+  includeTax:false, printMode:'thermal'
 };
-let products = [];
-let sales = [];
+let products=[], sales=[];
 
-/* ====== Auth UI ====== */
-$('loginBtn').addEventListener('click', async () => {
-  const email = $('email').value.trim();
-  const pass = $('password').value.trim();
+/* ----------------------- Auth UI ----------------------- */
+$('loginBtn').onclick=async()=>{
   $('authError').classList.add('hidden');
-  try {
-    await auth.signInWithEmailAndPassword(email, pass);
-  } catch (e) {
-    $('authError').textContent = e.message || 'Login failed';
+  try{
+    await auth.signInWithEmailAndPassword($('email').value.trim(), $('password').value.trim());
+  }catch(e){
+    $('authError').textContent=e.message;
     $('authError').classList.remove('hidden');
   }
-});
+};
+$('logoutBtn').onclick=()=>auth.signOut();
 
-$('logoutBtn').addEventListener('click', () => auth.signOut());
-
-/* ====== Auth State Listener ====== */
-auth.onAuthStateChanged(async (u) => {
-  currentUser = u;
-  if (!u) {
+/* ----------------------- Auth State ----------------------- */
+auth.onAuthStateChanged(async(u)=>{
+  if(!u){
+    // show login, hide app
     $('authView').classList.remove('hidden');
     $('appView').classList.add('hidden');
     return;
@@ -200,210 +195,227 @@ auth.onAuthStateChanged(async (u) => {
   $('appView').classList.remove('hidden');
   $('userBadge').textContent = u.email;
 
-  // Ensure shared settings doc exists once
-  const settingsRef = db.collection('meta').doc('settings');
-  const sSnap = await settingsRef.get();
-  if (!sSnap.exists) {
-    await settingsRef.set({
-      storeName: 'Your Store',
-      storeAddress: '',
-      storeContact: '',
-      logoUrl: '',
-      printMode: 'thermal',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+  // Ensure settings doc exists
+  const sRef = db.collection('meta').doc('settings');
+  const sSnap = await sRef.get().catch(()=>null);
+  if(!sSnap || !sSnap.exists){
+    await sRef.set({
+      storeName:'Your Store',
+      storeAddress:'',
+      storeContact:'',
+      logoUrl:'',
+      gstNumber:'',
+      taxPercent:0,
+      includeTax:false,
+      printMode:'thermal'
+    },{merge:true});
   }
 
-  // Live settings
-  settingsRef.onSnapshot((snap) => {
-    if (snap.exists) settingsDoc = { ...settingsDoc, ...snap.data() };
-    $('storeName').value = settingsDoc.storeName || '';
-    $('storeAddress').value = settingsDoc.storeAddress || '';
-    $('storeContact').value = settingsDoc.storeContact || '';
-    $('logoUrl').value = settingsDoc.logoUrl || '';
-    $('printMode').value = settingsDoc.printMode || 'thermal';
-    updatePrintModeUI();
-  });
+  // Listen settings
+  sRef.onSnapshot((snap)=>{
+    if(snap.exists){
+      settingsDoc = {...settingsDoc, ...snap.data()};
+      updateSettingsUI();
+    }
+  }, console.error);
 
-  // Products (query only non-deleted)
-  db.collection('products')
-    .where('deleted', '==', false)
-    .onSnapshot((qs) => {
-      products = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderInventory();
-      $('productCount').textContent = products.length;
-      rebuildBillLinesOptions();
-    }, (err)=>console.error(err));
+  // Listen products (safe query; no 'where' that can cause blank)
+  db.collection('products').onSnapshot(q=>{
+    products = q.docs
+      .map(d=>({id:d.id, ...d.data()}))
+      .filter(p=>!p.deleted);
+    renderInventory();
+    rebuildBillOptions();
+    $('productCount').textContent = products.length;
+  }, console.error);
 
-  // Also load items that don’t have 'deleted' field (for backward compatibility)
-  db.collection('products')
-    .where('deleted', 'in', [false, null])
-    .onSnapshot(()=>{},()=>{}); // no-op, keeps index relaxed if needed
-
-  // Sales
-  db.collection('sales').orderBy('createdAt','desc').limit(500).onSnapshot((qs) => {
-    sales = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Listen sales
+  db.collection('sales').orderBy('createdAt','desc').limit(500).onSnapshot(q=>{
+    sales = q.docs.map(d=>({id:d.id, ...d.data()}));
     renderDashboard();
-  });
+  }, console.error);
 });
 
-/* ====== Print Mode UI ====== */
-function updatePrintModeUI(){
+/* ----------------------- Settings UI ----------------------- */
+function updateSettingsUI(){
+  $('storeName').value     = settingsDoc.storeName || '';
+  $('storeAddress').value  = settingsDoc.storeAddress || '';
+  $('storeContact').value  = settingsDoc.storeContact || '';
+  $('logoUrl').value       = settingsDoc.logoUrl || '';
+  $('gstNumber').value     = settingsDoc.gstNumber || '';
+  $('taxPercent').value    = settingsDoc.taxPercent || 0;
+  $('includeTax').checked  = !!settingsDoc.includeTax;
+  $('printMode').value     = settingsDoc.printMode || 'thermal';
+
   const area = $('printArea');
   area.classList.remove('thermal','normal');
-  area.classList.add(settingsDoc.printMode === 'normal' ? 'normal' : 'thermal');
+  area.classList.add(settingsDoc.printMode);
   $('printModeChip').textContent = `print: ${settingsDoc.printMode}`;
 }
 
-/* ====== Save Settings ====== */
-$('saveSettingsBtn').addEventListener('click', async () => {
-  const data = {
-    storeName: $('storeName').value.trim(),
-    storeAddress: $('storeAddress').value.trim(),
-    storeContact: $('storeContact').value.trim(),
-    logoUrl: $('logoUrl').value.trim(),
+$('saveSettingsBtn').onclick=async()=>{
+  const data={
+    storeName:$('storeName').value.trim(),
+    storeAddress:$('storeAddress').value.trim(),
+    storeContact:$('storeContact').value.trim(),
+    logoUrl:$('logoUrl').value.trim(),
+    gstNumber:$('gstNumber').value.trim(),
+    taxPercent: Number($('taxPercent').value) || 0,
+    includeTax: $('includeTax').checked,
     printMode: $('printMode').value
   };
-  await db.collection('meta').doc('settings').set(data, { merge: true });
-  $('settingsInfo').textContent = 'Saved ✓';
-  setTimeout(() => $('settingsInfo').textContent = '', 1500);
-});
+  await db.collection('meta').doc('settings').set(data,{merge:true});
+  $('settingsInfo').textContent='Saved ✓';
+  setTimeout(()=>$('settingsInfo').textContent='',1500);
+};
 
-/* ====== Dashboard ====== */
-function renderDashboard(){
-  const total = sales.reduce((a,b)=> a + (Number(b.total)||0), 0);
-  $('totalSales').textContent = currency(total);
-  const start = todayStart();
-  const today = sales.filter(s => s.createdAt && s.createdAt.toDate && s.createdAt.toDate() >= start)
-                     .reduce((a,b)=> a + (Number(b.total)||0), 0);
-  $('todaysSales').textContent = currency(today);
-}
-
-/* ====== Inventory ====== */
+/* ----------------------- Inventory ----------------------- */
 function renderInventory(){
-  const list = $('inventoryList');
-  list.innerHTML = '';
+  const list=$('inventoryList');
+  list.innerHTML='';
   products.forEach(p=>{
-    const li = document.createElement('li');
-    li.className = 'py-2 flex items-start justify-between gap-2';
-    li.innerHTML = `
+    const li=document.createElement('li');
+    li.className='py-2 flex items-start justify-between gap-2';
+    li.innerHTML=`
       <div>
-        <div class="font-medium">${p.name||'-'} ${p.infinite ? '<span class="text-xs text-green-600">(Infinite)</span>' : ''}</div>
-        <div class="text-xs text-gray-500">SKU: ${p.sku||'-'} • Qty: ${p.quantity ?? 0} • Price: ${currency(p.price||0)}</div>
+        <div class="font-medium">${p.name||'-'} ${p.infinite?'<span class="text-xs text-green-600">(Infinite)</span>':''}</div>
+        <div class="text-xs text-gray-500">SKU: ${p.sku||'-'} • Qty: ${p.infinite?'∞':(p.quantity??0)} • Price: ${currency(p.price||0)}</div>
       </div>
       <div class="flex gap-2">
         <button class="px-2 py-1 text-xs border rounded" data-action="plus10" data-id="${p.id}">+10</button>
         <button class="px-2 py-1 text-xs border rounded" data-action="toggleInf" data-id="${p.id}">${p.infinite?'Finite':'Infinite'}</button>
         <button class="px-2 py-1 text-xs border rounded" data-action="delete" data-id="${p.id}">Delete</button>
-      </div>`;
+      </div>
+    `;
     list.appendChild(li);
   });
 }
 
-$('addProductBtn').addEventListener('click', async () => {
-  const p = {
+$('addProductBtn').onclick=async()=>{
+  const p={
     sku: $('pSku').value.trim(),
     name: $('pName').value.trim(),
-    quantity: Number($('pQty').value || 0),
-    cost: Number($('pCost').value || 0),
-    price: Number($('pPrice').value || 0),
+    quantity: Number($('pQty').value||0),
+    cost: Number($('pCost').value||0),
+    price: Number($('pPrice').value||0),
     infinite: $('pInfinite').checked,
-    deleted: false,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    deleted:false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  if (!p.name) return alert('Product name required');
+  if(!p.name) return alert('Product name required');
   await db.collection('products').add(p);
-  $('pSku').value = $('pName').value = $('pQty').value = $('pCost').value = $('pPrice').value = '';
-  $('pInfinite').checked = false;
-});
+  $('pSku').value='';$('pName').value='';$('pQty').value='';$('pCost').value='';$('pPrice').value='';
+  $('pInfinite').checked=false;
+};
 
-$('inventoryList').addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const id = btn.dataset.id; const action = btn.dataset.action;
-  const ref = db.collection('products').doc(id);
-  if (action==='plus10') await ref.update({ quantity: firebase.firestore.FieldValue.increment(10) });
-  if (action==='toggleInf') {
-    const snap = await ref.get(); const inf = !!(snap.data() && snap.data().infinite);
-    await ref.update({ infinite: !inf });
+$('inventoryList').addEventListener('click', async (e)=>{
+  const btn=e.target.closest('button'); if(!btn) return;
+  const id=btn.dataset.id; const action=btn.dataset.action; if(!id) return;
+  const ref=db.collection('products').doc(id);
+  if(action==='plus10') await ref.update({quantity: firebase.firestore.FieldValue.increment(10)});
+  if(action==='toggleInf'){
+    const snap=await ref.get(); const inf=!!(snap.data()||{}).infinite;
+    await ref.update({infinite: !inf});
   }
-  if (action==='delete') await ref.update({ deleted: true });
+  if(action==='delete') await ref.update({deleted:true});
 });
 
-/* ====== Billing ====== */
-const billLinesEl = $('billLines');
-function rebuildBillLinesOptions(){
-  [...billLinesEl.querySelectorAll('select.prodSel')].forEach(sel => {
-    const val = sel.value || '';
+/* ----------------------- Billing ----------------------- */
+const billLinesEl=$('billLines');
+function rebuildBillOptions(){
+  [...billLinesEl.querySelectorAll('select.prodSel')].forEach(sel=>{
+    const val=sel.value;
     sel.innerHTML = `<option value="">Select product</option>` +
-      products.map(p => `<option value="${p.id}" ${p.id===val?'selected':''}>${p.name} — ${currency(p.price||0)}</option>`).join('');
+      products.map(p=>`<option value="${p.id}" ${p.id===val?'selected':''}>${p.name} — ${currency(p.price||0)}</option>`).join('');
   });
 }
 function addLine(){
-  const wrap = document.createElement('div');
-  wrap.className = 'flex gap-2';
-  wrap.innerHTML = `
-    <select class="prodSel p-2 border rounded flex-1"></select>
+  const wrap=document.createElement('div');
+  wrap.className='flex gap-2';
+  wrap.innerHTML=`
+    <select class="prodSel p-2 border rounded flex-1">
+      <option value="">Select product</option>
+      ${products.map(p=>`<option value="${p.id}">${p.name} — ${currency(p.price||0)}</option>`).join('')}
+    </select>
     <input type="number" class="qtySel w-24 p-2 border rounded" min="1" value="1" />
-    <button class="rmLine px-2 py-1 border rounded">Remove</button>`;
+    <button class="rmLine px-2 py-1 border rounded">Remove</button>
+  `;
   billLinesEl.appendChild(wrap);
-  rebuildBillLinesOptions();
 }
-$('addLineBtn').addEventListener('click', addLine);
+$('addLineBtn').onclick=addLine;
 addLine();
 
-billLinesEl.addEventListener('click', (e)=>{
-  if (e.target.classList.contains('rmLine')) e.target.closest('div').remove();
+billLinesEl.addEventListener('click',(e)=>{
+  if(e.target.classList.contains('rmLine')){
+    e.target.closest('div').remove();
+  }
 });
 
-$('createBillBtn').addEventListener('click', async () => {
-  const rows = [...billLinesEl.querySelectorAll('div')];
-  const items = rows.map(row => {
-    const pid = row.querySelector('select.prodSel').value;
-    const qty = Number(row.querySelector('input.qtySel').value||0);
-    const p = products.find(x=>x.id===pid) || {};
-    return pid ? { productId: pid, name: p.name||'-', qty, price: Number(p.price||0), cost: Number(p.cost||0), infinite: !!p.infinite } : null;
-  }).filter(Boolean).filter(x => x.qty>0);
-
-  if (!items.length) return alert('Add at least one item');
+$('createBillBtn').onclick=async()=>{
+  // collect items
+  const items=[...billLinesEl.querySelectorAll('div')].map(row=>{
+    const pid=row.querySelector('select.prodSel').value;
+    const qty=Number(row.querySelector('input.qtySel').value||0);
+    const p=products.find(x=>x.id===pid)||{};
+    return (pid && qty>0)?{productId:pid,name:p.name,qty,price:Number(p.price||0),cost:Number(p.cost||0),infinite:!!p.infinite}:null;
+  }).filter(Boolean);
+  if(!items.length) return alert('Add at least one item');
 
   const discount = Number($('discount').value || 0);
   const paymentMode = $('paymentMode').value;
 
-  let total = 0, totalCost = 0;
-  items.forEach(it => { total += it.qty*it.price; totalCost += it.qty*it.cost; });
-  total -= discount; const profit = total - totalCost;
+  // Calculate totals with includeTax option
+  const subtotalRaw = items.reduce((a,b)=> a + (b.qty*b.price), 0);
+  let subtotal = subtotalRaw; // shown as "Subtotal (before discount)"
+  let taxAmt = 0;
+  let total = 0;
 
-  const saleDoc = await db.collection('sales').add({
-    items, total, totalCost, profit, discount, paymentMode,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    printMode: settingsDoc.printMode, logoUrl: settingsDoc.logoUrl || '',
-    storeName: settingsDoc.storeName || '', storeAddress: settingsDoc.storeAddress || '', storeContact: settingsDoc.storeContact || ''
-  });
+  const taxPct = Number(settingsDoc.taxPercent||0);
 
-  for (const it of items) {
-    if (it.infinite) continue;
-    const ref = db.collection('products').doc(it.productId);
-    await ref.update({ quantity: firebase.firestore.FieldValue.increment(-it.qty) });
+  if(settingsDoc.includeTax){
+    // Prices already include GST
+    // tax portion extracted from subtotal (before discount)
+    taxAmt = taxPct>0 ? (subtotal * (taxPct / (100 + taxPct))) : 0;
+    // Total is still subtotal - discount (tax already included in subtotal)
+    total = Math.max(0, subtotal - discount);
+  }else{
+    // Prices exclude GST
+    const taxableBase = Math.max(0, subtotal - discount);
+    taxAmt = taxPct>0 ? (taxableBase * taxPct / 100) : 0;
+    total = taxableBase + taxAmt;
   }
 
-  renderBill({ id: saleDoc.id, items, total, discount, paymentMode });
-  alert('Invoice created: ' + saleDoc.id);
-});
+  // write sale
+  const saleRef = await db.collection('sales').add({
+    items, subtotal, discount, taxPercent: taxPct, taxAmt, total, paymentMode,
+    includeTax: !!settingsDoc.includeTax,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
-$('printBillBtn').addEventListener('click', () => window.print());
+  // decrement stock for finite items
+  for(const it of items){
+    if(it.infinite) continue;
+    const ref=db.collection('products').doc(it.productId);
+    await ref.update({quantity: firebase.firestore.FieldValue.increment(-it.qty)});
+  }
 
-function renderBill({ id, items, total, discount, paymentMode }){
-  const el = $('billContainer');
-  const date = new Date().toLocaleString();
+  renderBill({id:saleRef.id, items, subtotal, discount, taxAmt, total, paymentMode});
+  alert('Invoice created: '+saleRef.id);
+};
+
+$('printBillBtn').onclick=()=>window.print();
+
+function renderBill({id, items, subtotal, discount, taxAmt, total, paymentMode}){
+  const el=$('billContainer');
+  const date=new Date().toLocaleString();
   el.innerHTML = `
     <div class="text-center">
       ${settingsDoc.logoUrl ? `<img src="${settingsDoc.logoUrl}" alt="logo" class="mx-auto mb-2 max-h-12"/>` : ''}
-      <div class="font-bold">${settingsDoc.storeName || 'Your Store'}</div>
-      <div class="text-xs">${settingsDoc.storeAddress || ''}</div>
-      <div class="text-xs">${settingsDoc.storeContact || ''}</div>
-      <div class="text-xs mt-1">Invoice #${(id||'').slice(-8)} • ${date}</div>
-      <div class="text-xs">Payment: ${paymentMode}</div>
+      <div class="font-bold">${settingsDoc.storeName||'Your Store'}</div>
+      ${settingsDoc.storeAddress?`<div class="text-xs">${settingsDoc.storeAddress}</div>`:''}
+      ${settingsDoc.storeContact?`<div class="text-xs">${settingsDoc.storeContact}</div>`:''}
+      ${settingsDoc.gstNumber?`<div class="text-xs">GST: ${settingsDoc.gstNumber}</div>`:''}
+      <div class="text-xs">Invoice #${(id||'').slice(-8)} • ${date} • Payment: ${paymentMode}</div>
     </div>
     <hr class="my-2" />
     <table class="w-full text-sm">
@@ -418,10 +430,23 @@ function renderBill({ id, items, total, discount, paymentMode }){
       </tbody>
     </table>
     <hr class="my-2" />
-    <div class="flex justify-between text-sm"><span>Discount</span><span>${(discount||0).toFixed(2)}</span></div>
-    <div class="flex justify-between font-bold"><span>Total</span><span>${(total||0).toFixed(2)}</span></div>
+    <div class="flex justify-between text-sm"><span>Subtotal</span><span>${currency(subtotal)}</span></div>
+    <div class="flex justify-between text-sm"><span>Discount</span><span>${currency(discount)}</span></div>
+    <div class="flex justify-between text-sm"><span>Tax ${settingsDoc.includeTax?'(incl.)':''} (${settingsDoc.taxPercent||0}%)</span><span>${currency(taxAmt)}</span></div>
+    <div class="flex justify-between font-bold"><span>Total</span><span>${currency(total)}</span></div>
     <div class="text-center text-xs mt-2">Thank you!</div>
   `;
+}
+
+/* ----------------------- Dashboard ----------------------- */
+function renderDashboard(){
+  const t0 = sales.reduce((a,b)=> a + (b.total||0), 0);
+  $('totalSales').textContent = currency(t0);
+
+  const start = todayStart();
+  const ts = sales.filter(s => s.createdAt && s.createdAt.toDate && s.createdAt.toDate() >= start)
+                  .reduce((a,b)=> a + (b.total||0), 0);
+  $('todaysSales').textContent = currency(ts);
 }
 </script>
 </body>
