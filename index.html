@@ -1109,23 +1109,6 @@ function loadDashboard() {
     }catch(e){ showToast('Import error: '+(e.message||e),'error'); }
   }
 
-  // ===== Simple Dashboard calc that needs DOM ready =====
-  function loadDashboard(){
-    // total sales already set elsewhere; also fill recent, low stock via render functions
-   db.collection('sales').onSnapshot((qs) => {
-  sales = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderDashboard();
-});
-    $('recentTransactions').innerHTML = recents.map(t=>`
-      <tr>
-        <td>${t.invoiceNumber}</td>
-        <td>${new Date(t.date).toLocaleDateString()}</td>
-        <td>${t.customerName || 'Walk-in'}</td>
-        <td>₹${Number(t.total||0).toFixed(2)}</td>
-        <td><button class="btn btn-sm btn-primary" onclick="viewInvoice('${t.invoiceNumber}')">View</button></td>
-      </tr>
-    `).join('') || '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
-  }
 
   // ===== init defaults =====
   // Pre-fill POS tax with settings GST when available (after login it will update)
