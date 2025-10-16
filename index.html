@@ -1143,6 +1143,18 @@ function loadDashboard() {
     $('taxPercent').value = settings.gst || 0;
   });
   </script>  
+  <!-- Firebase (Compat) SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<!-- ✅ Your Firebase configuration (new file you made) -->
+<script src="firebase-config.js"></script>
+
+<!-- ✅ Your main application logic -->
+<script src="main.js"></script>
+
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 </body>
