@@ -1096,7 +1096,10 @@ db.collection('users').doc(UID).collection('products')
   // ===== Simple Dashboard calc that needs DOM ready =====
   function loadDashboard(){
     // total sales already set elsewhere; also fill recent, low stock via render functions
-    const recents = [...transactions].slice(0,5);
+   db.collection('sales').onSnapshot((qs) => {
+  sales = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderDashboard();
+});
     $('recentTransactions').innerHTML = recents.map(t=>`
       <tr>
         <td>${t.invoiceNumber}</td>
