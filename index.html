@@ -502,6 +502,14 @@ db.collection('users').doc(UID).collection('products')
     renderProducts();
     rebuildPOSSelectors();
   });
+// ✅ Listen for all sales from root-level "sales" collection
+db.collection('sales')
+  .orderBy('createdAt', 'desc')
+  .limit(200)
+  .onSnapshot(qs => {
+    transactions = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadDashboard();
+  });
 
 
     db.collection('users').doc(UID).collection('customers')
