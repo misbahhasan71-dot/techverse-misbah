@@ -1003,6 +1003,81 @@
     }catch(e){ showToast('Import error: '+(e.message||e),'error'); }
   }
   </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } 
+    from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
+    authDomain: "techverse-ca88a.firebaseapp.com",
+    projectId: "techverse-ca88a",
+    storageBucket: "techverse-ca88a.firebasestorage.app",
+    messagingSenderId: "288969741715",
+    appId: "1:288969741715:web:03ddb8b82da9224e234466",
+    measurementId: "G-33XTL4HJR9"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // ==== Send Login Link ====
+  const sendBtn = document.getElementById("sendLinkBtn");
+  const emailInput = document.getElementById("loginEmail");
+  const statusEl = document.getElementById("loginStatus");
+
+  sendBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+    if (!email) {
+      statusEl.textContent = "⚠️ Please enter your email.";
+      statusEl.style.color = "red";
+      return;
+    }
+
+    const actionCodeSettings = {
+      url: window.location.href, // Return to same page after verification
+      handleCodeInApp: true,
+    };
+
+    try {
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem("emailForSignIn", email);
+      statusEl.textContent = "✅ Link sent! Check your inbox.";
+      statusEl.style.color = "green";
+    } catch (error) {
+      console.error("Error sending link:", error);
+      statusEl.textContent = "❌ " + error.message;
+      statusEl.style.color = "red";
+    }
+  });
+
+  // ==== Confirm Login When User Clicks the Email Link ====
+  if (isSignInWithEmailLink(auth, window.location.href)) {
+    let email = window.localStorage.getItem("emailForSignIn");
+    if (!email) {
+      email = window.prompt("Please confirm your email to finish login:");
+    }
+
+    signInWithEmailLink(auth, email, window.location.href)
+      .then((result) => {
+        console.log("✅ Signed in:", result.user);
+        window.localStorage.removeItem("emailForSignIn");
+        statusEl.textContent = `Welcome ${result.user.email}`;
+        statusEl.style.color = "green";
+
+        // Redirect or show dashboard
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        document.getElementById("userInfo").textContent = result.user.email;
+      })
+      .catch((error) => {
+        console.error("Login error:", error);
+        statusEl.textContent = "❌ Login failed: " + error.message;
+        statusEl.style.color = "red";
+      });
+  }
+</script>
 
   <!-- reCAPTCHA removed by request -->
 </body>
