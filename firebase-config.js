@@ -1,4 +1,4 @@
-// firebase-config.js
+// firebase-config.js 
 const firebaseConfig = {
   apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
   authDomain: "techverse-ca88a.firebaseapp.com",
