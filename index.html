@@ -448,34 +448,61 @@
     if (id==='pos') rebuildPOSSelectors();
     if (id==='reports') loadReports();
   }
-
-  // ===== Auth (Login only) =====
-$('loginBtn').addEventListener('click', async ()=>{
+// ===== Auth (Login only) =====
+$('loginBtn').addEventListener('click', async () => {
   const recaptchaResponse = grecaptcha.getResponse();
   if (!recaptchaResponse) {
-    showToast('Please complete the reCAPTCHA check','error');
+    showToast('Please complete the reCAPTCHA check', 'error');
     return;
   }
 
-    const email = $('loginEmail').value.trim();
-    const pass = $('loginPassword').value.trim();
-    try{
-      await auth.signInWithEmailAndPassword(email, pass);
-    }catch(err){ showToast(err.message || 'Login failed','error'); }
-  });
-  $('logoutBtn').addEventListener('click', ()=>auth.signOut());
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPassword').value.trim();
 
-  auth.onAuthStateChanged(async (u)=>{
-    if(!u){
-      UID = null;
-      $('loginContainer').style.display='flex';
-      $('appContainer').style.display='none';
-      return;
+  try {
+    // Attempt login
+    await auth.signInWithEmailAndPassword(email, pass);
+    showToast('✅ Login successful! Redirecting...');
+  } catch (err) {
+    console.error("Login Error:", err);
+
+    // Smart error handling
+    if (err.code === 'auth/user-not-found') {
+      showToast('❌ No account found with this email. Please contact the admin.', 'error');
+    } 
+    else if (err.code === 'auth/wrong-password') {
+      showToast('⚠️ Incorrect password. Please try again.', 'error');
+    } 
+    else if (err.code === 'auth/too-many-requests') {
+      showToast('🚫 Too many failed attempts. Try again later.', 'error');
+    } 
+    else if (err.code === 'auth/invalid-email') {
+      showToast('📧 Invalid email format.', 'error');
     }
-    UID = u.uid;
-    $('userInfo').textContent = u.email;
-    $('loginContainer').style.display='none';
-    $('appContainer').style.display='block';
+    else {
+      showToast(err.message || 'Login failed', 'error');
+    }
+  }
+});
+
+// Logout
+$('logoutBtn').addEventListener('click', () => auth.signOut());
+
+// Auth state listener
+auth.onAuthStateChanged(async (u) => {
+  if (!u) {
+    UID = null;
+    $('loginContainer').style.display = 'flex';
+    $('appContainer').style.display = 'none';
+    return;
+  }
+
+  UID = u.uid;
+  $('userInfo').textContent = u.email;
+  $('loginContainer').style.display = 'none';
+  $('appContainer').style.display = 'block';
+});
+
 
     // Ensure settings doc exists
     const setRef = db.collection('users').doc(UID).collection('meta').doc('settings');
