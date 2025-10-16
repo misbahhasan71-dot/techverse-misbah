@@ -493,12 +493,16 @@ $('loginBtn').addEventListener('click', async ()=>{
     db.collection('users').doc(UID).collection('meta').doc('settings')
       .onSnapshot(s=>{ if(s.exists){ settings = { ...settings, ...s.data() }; $('printModeSelect').value = settings.printMode||'normal'; }});
 
-    db.collection('users').doc(UID).collection('products')
-      .where('deleted','!=',true).onSnapshot(qs=>{
-        products = qs.docs.map(d=>({id:d.id,...d.data()}));
-        renderProducts();
-        rebuildPOSSelectors();
-      });
+  // ✅ FIXED Product Listener (shows all unless deleted=true)
+db.collection('users').doc(UID).collection('products')
+  .onSnapshot(qs => {
+    products = qs.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => !p.deleted); // show all if deleted is not true
+    renderProducts();
+    rebuildPOSSelectors();
+  });
+
 
     db.collection('users').doc(UID).collection('customers')
       .onSnapshot(qs=>{
