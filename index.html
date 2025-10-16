@@ -882,34 +882,26 @@ db.collection('sales')
 
   // ===== Dashboard / Reports =====
 function loadDashboard() {
-  // 🧮 Total sales
-  const totalSales = transactions.reduce((s, t) => s + (t.total || 0), 0);
+  // 🧮 Total Sales (in ₹)
+  const totalSales = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
   $('totalSales').textContent = totalSales.toFixed(2);
 
-  // 🕓 Recent transactions (last 5)
+  // 🕓 Recent Transactions (last 5)
   const recents = [...transactions].slice(0, 5);
   $('recentTransactions').innerHTML =
-    recents
-      .map(
-        (t) => `
+    recents.map(t => `
       <tr>
         <td>${t.invoiceNumber || t.id}</td>
         <td>${
-          t.createdAt
-            ? new Date(
-                t.createdAt.toDate ? t.createdAt.toDate() : t.createdAt
-              ).toLocaleDateString()
-            : "-"
+          t.createdAt && t.createdAt.toDate
+            ? new Date(t.createdAt.toDate()).toLocaleDateString()
+            : (t.date ? new Date(t.date).toLocaleDateString() : '-')
         }</td>
-        <td>${t.customerName || "Walk-in"}</td>
+        <td>${t.customerName || 'Walk-in'}</td>
         <td>₹${Number(t.total || 0).toFixed(2)}</td>
-        <td><button class="btn btn-sm btn-primary" onclick="viewInvoice('${
-          t.invoiceNumber || t.id
-        }')">View</button></td>
+        <td><button class="btn btn-sm btn-primary" onclick="viewInvoice('${t.invoiceNumber || t.id}')">View</button></td>
       </tr>
-    `
-      )
-      .join("") ||
+    `).join('') ||
     '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
 }
 
