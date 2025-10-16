@@ -873,22 +873,38 @@ db.collection('users').doc(UID).collection('products')
   }
 
   // ===== Dashboard / Reports =====
-  function loadDashboard(){
-    const totalSales = transactions.reduce((s,t)=> s+(t.total||0), 0);
-    $('totalSales').textContent = totalSales.toFixed(2);
+function loadDashboard() {
+  // 🧮 Total sales
+  const totalSales = transactions.reduce((s, t) => s + (t.total || 0), 0);
+  $('totalSales').textContent = totalSales.toFixed(2);
 
-    // Recent transactions
-    const recents = [...transactions].slice(0,5);
-    $('recentTransactions').innerHTML = recents.map(t=>`
+  // 🕓 Recent transactions (last 5)
+  const recents = [...transactions].slice(0, 5);
+  $('recentTransactions').innerHTML =
+    recents
+      .map(
+        (t) => `
       <tr>
-        <td>${t.invoiceNumber}</td>
-        <td>${new Date(t.date).toLocaleDateString()}</td>
-        <td>${t.customerName || 'Walk-in'}</td>
-        <td>₹${Number(t.total||0).toFixed(2)}</td>
-        <td><button class="btn btn-sm btn-primary" onclick="viewInvoice('${t.invoiceNumber}')">View</button></td>
+        <td>${t.invoiceNumber || t.id}</td>
+        <td>${
+          t.createdAt
+            ? new Date(
+                t.createdAt.toDate ? t.createdAt.toDate() : t.createdAt
+              ).toLocaleDateString()
+            : "-"
+        }</td>
+        <td>${t.customerName || "Walk-in"}</td>
+        <td>₹${Number(t.total || 0).toFixed(2)}</td>
+        <td><button class="btn btn-sm btn-primary" onclick="viewInvoice('${
+          t.invoiceNumber || t.id
+        }')">View</button></td>
       </tr>
-    `).join('') || '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
-  }
+    `
+      )
+      .join("") ||
+    '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
+}
+
 
   // (Keeping your simple SVG chart util)
   function drawSalesChart(data){
