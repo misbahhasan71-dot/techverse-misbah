@@ -497,10 +497,50 @@ auth.onAuthStateChanged(async (u) => {
     return;
   }
 
+  // User logged in
   UID = u.uid;
   $('userInfo').textContent = u.email;
   $('loginContainer').style.display = 'none';
   $('appContainer').style.display = 'block';
+
+  // Initialize this user's data space
+  const userRoot = db.collection('users').doc(UID);
+
+  try {
+    // ✅ Ensure user settings exist
+    const setRef = userRoot.collection('meta').doc('settings');
+    const snap = await setRef.get();
+    if (!snap.exists) {
+      await setRef.set(settings); // default store settings
+    } else {
+      settings = { ...settings, ...snap.data() };
+    }
+
+    // ✅ Load products, customers, transactions in real-time
+    userRoot.collection('products').onSnapshot(qs => {
+      products = qs.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => !p.deleted);
+      renderProducts();
+      rebuildPOSSelectors();
+    });
+
+    userRoot.collection('customers').onSnapshot(qs => {
+      customers = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderCustomers();
+    });
+
+    userRoot.collection('transactions').orderBy('createdAt', 'desc').limit(200)
+      .onSnapshot(qs => {
+        transactions = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+        loadDashboard();
+      });
+
+    showToast(`Welcome, ${u.email}`);
+    console.log("✅ Private data space loaded for UID:", UID);
+
+  } catch (e) {
+    console.error("🔥 Firestore init error:", e);
+    showToast("Error loading user data: " + e.message, "error");
+  }
 });
 
 
