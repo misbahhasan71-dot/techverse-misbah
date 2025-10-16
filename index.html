@@ -5,22 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Techverse Solution – Inventory & Billing</title>
 
-  <!-- Keep your original styles/layout -->
   <style>
-    /* === your original CSS (unchanged) === */
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh}
     .login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
     .login-box{background:white;padding:40px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);max-width:400px;width:100%}
     .login-box h1{color:#2563eb;margin-bottom:10px;font-size:28px}
-    .login-box p{color:#666;margin-bottom:30px}
-    .form-group{margin-bottom:20px}
-    .form-group label{display:block;margin-bottom:8px;color:#333;font-weight:500}
-    .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;transition:border-color .3s}
-    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#2563eb}
-    .btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:all .3s}
+    .login-box p{color:#666;margin-bottom:20px}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;margin-bottom:6px;color:#333;font-weight:500}
+    .form-group input{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px}
+    .btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s}
     .btn-primary{background:#2563eb;color:white}
-    .btn-primary:hover{background:#1d4ed8;transform:translateY(-2px);box-shadow:0 5px 15px rgba(37,99,235,.3)}
+    .btn-primary:hover{background:#1d4ed8}
     .btn-secondary{background:#6b7280;color:white}
     .btn-secondary:hover{background:#4b5563}
     .btn-success{background:#10b981;color:white}
@@ -29,87 +26,75 @@
     .btn-danger:hover{background:#dc2626}
     .btn-sm{padding:6px 12px;font-size:12px}
     .app-container{display:none;background:#f3f4f6;min-height:100vh}
-    .header{background:white;padding:20px 30px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-    .header h1{color:#2563eb;font-size:24px}
-    .header-right{display:flex;align-items:center;gap:15px}
-    .user-info{color:#666;font-size:14px}
-    .nav-tabs{background:white;padding:0 30px;display:flex;gap:5px;overflow-x:auto;box-shadow:0 2px 5px rgba(0,0,0,.05)}
-    .nav-tab{padding:15px 20px;cursor:pointer;border:none;background:transparent;color:#666;font-weight:500;border-bottom:3px solid transparent;transition:all .3s;white-space:nowrap}
+    .header{background:white;padding:16px 24px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .header h1{color:#2563eb;font-size:22px}
+    .user-info{color:#555;font-size:14px}
+    .nav-tabs{background:white;padding:0 16px;display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid #e5e7eb}
+    .nav-tab{padding:12px 16px;cursor:pointer;border:none;background:transparent;color:#666;font-weight:600;border-bottom:3px solid transparent}
     .nav-tab:hover{color:#2563eb;background:#eff6ff}
     .nav-tab.active{color:#2563eb;border-bottom-color:#2563eb}
-    .content{padding:30px;max-width:1400px;margin:0 auto}
+    .content{padding:20px;max-width:1400px;margin:0 auto}
     .tab-content{display:none}
     .tab-content.active{display:block}
-    .card{background:white;border-radius:12px;padding:25px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
-    .card h2{color:#1f2937;margin-bottom:20px;font-size:20px}
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-bottom:30px}
-    .stat-card{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:white;padding:25px;border-radius:12px;box-shadow:0 4px 15px rgba(37,99,235,.3)}
-    .stat-card.green{background:linear-gradient(135deg,#10b981 0%,#059669 100%);box-shadow:0 4px 15px rgba(16,185,129,.3)}
-    .stat-card.orange{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);box-shadow:0 4px 15px rgba(245,158,11,.3)}
-    .stat-card.purple{background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%);box-shadow:0 4px 15px rgba(139,92,246,.3)}
-    .stat-label{font-size:14px;opacity:.9;margin-bottom:8px}
-    .stat-value{font-size:32px;font-weight:bold}
-    .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
-    .search-box{margin-bottom:20px}
-    .search-box input{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px}
-    table{width:100%;border-collapse:collapse;margin-top:20px}
+    .card{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
+    .card h2{color:#1f2937;margin-bottom:16px;font-size:18px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:20px}
+    .stat-card{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:white;padding:18px;border-radius:12px}
+    .stat-card.green{background:linear-gradient(135deg,#10b981 0%,#059669 100%)}
+    .stat-card.orange{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%)}
+    .stat-card.purple{background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%)}
+    .stat-label{font-size:13px;opacity:.95;margin-bottom:6px}
+    .stat-value{font-size:28px;font-weight:800}
+    .search-box input{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
     thead{background:#f3f4f6}
-    th{padding:12px;text-align:left;color:#374151;font-weight:600;font-size:13px}
-    td{padding:12px;border-bottom:1px solid #e5e7eb;color:#4b5563;font-size:14px}
-    tr:hover{background:#f9fafb}
-    .actions{display:flex;gap:8px}
-    .toast{position:fixed;top:20px;right:20px;background:white;padding:15px 20px;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.2);display:none;z-index:1000;animation:slideIn .3s ease}
-    @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+    th{padding:10px;text-align:left;color:#374151;font-weight:700;font-size:13px}
+    td{padding:10px;border-bottom:1px solid #e5e7eb;color:#4b5563;font-size:14px;vertical-align:top}
+    tr:hover{background:#fafafa}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .toast{position:fixed;top:20px;right:20px;background:white;padding:12px 18px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.15);display:none;z-index:9999}
     .toast.success{border-left:4px solid #10b981}
     .toast.error{border-left:4px solid #ef4444}
-    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;justify-content:center;align-items:center;padding:20px}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:999;justify-content:center;align-items:center;padding:20px}
     .modal.active{display:flex}
-    .modal-content{background:white;padding:30px;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto}
-    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-    .modal-header h3{color:#1f2937;font-size:20px}
+    .modal-content{background:white;padding:22px;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .modal-header h3{color:#111827;font-size:18px}
     .close-btn{background:none;border:none;font-size:24px;cursor:pointer;color:#9ca3af}
-    .close-btn:hover{color:#374151}
-    .pos-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
-    .product-select{margin-bottom:15px}
-    .product-select select{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px}
+    .pos-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .product-select select,.form-group select{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px}
     .quantity-control{display:flex;align-items:center;gap:8px}
-    .quantity-control button{width:28px;height:28px;border:none;background:#2563eb;color:white;border-radius:4px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+    .quantity-control button{width:28px;height:28px;border:none;background:#2563eb;color:white;border-radius:6px;cursor:pointer;font-size:16px}
     .quantity-control span{min-width:30px;text-align:center}
-    .low-stock{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-    .invoice{max-width:800px;margin:0 auto;padding:40px;background:white}
-    .invoice-header{text-align:center;border-bottom:2px solid #2563eb;padding-bottom:20px;margin-bottom:30px}
-    .invoice-header h1{color:#2563eb;font-size:28px;margin-bottom:5px}
-    .invoice-details{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px}
-    .chart-container{position:relative;height:300px;margin-top:20px}
+    .low-stock{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+    .invoice{max-width:800px;margin:0 auto;padding:32px;background:white}
+    .invoice-header{text-align:center;border-bottom:2px solid #2563eb;padding-bottom:16px;margin-bottom:20px}
+    .invoice-header h1{color:#2563eb;font-size:24px;margin-bottom:6px}
+    .invoice-details{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    .cart-total .total-row{display:flex;justify-content:space-between;margin:6px 0}
+    .cart-total .grand{font-size:18px;font-weight:800;color:#2563eb}
+    @media (max-width:900px){.pos-grid{grid-template-columns:1fr}}
     @media print{body *{visibility:hidden}.invoice,.invoice *{visibility:visible}.invoice{position:absolute;left:0;top:0;width:100%}.btn{display:none}}
-    @media (max-width:768px){.pos-grid{grid-template-columns:1fr}.header h1{font-size:18px}.content{padding:15px}.nav-tabs{padding:0 15px}.form-row{grid-template-columns:1fr}table{font-size:12px}th,td{padding:8px 4px}}
-    /* Print modes */
-    .print-thermal .invoice{max-width:58mm;padding:10px}
-    .print-thermal .invoice-header{border-bottom:1px dashed #999}
-    .print-normal .invoice{max-width:800px}
   </style>
 </head>
 <body>
   <div id="toast" class="toast"></div>
 
-  <!-- LOGIN (no sign up link) -->
+  <!-- LOGIN -->
   <div id="loginContainer" class="login-container">
     <div class="login-box">
       <h1>Techverse Solution</h1>
       <p>Inventory & Billing System</p>
+
       <div class="form-group">
         <label>Email</label>
         <input type="email" id="loginEmail" placeholder="you@example.com">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="********">
+        <input type="password" id="loginPassword" placeholder="">
       </div>
-<div class="form-group">
- 
-</div>
-<button class="btn btn-primary" id="loginBtn">Login</button>
-
+      <button class="btn btn-primary" id="loginBtn">Login</button>
     </div>
   </div>
 
@@ -117,7 +102,7 @@
   <div id="appContainer" class="app-container">
     <div class="header">
       <h1>Techverse Solution – Inventory & Billing</h1>
-      <div class="header-right">
+      <div style="display:flex;gap:8px;align-items:center">
         <span class="user-info" id="userInfo"></span>
         <button class="btn btn-secondary btn-sm" onclick="openSettings()">Store Settings</button>
         <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
@@ -164,12 +149,12 @@
       <!-- Products -->
       <div id="products" class="tab-content">
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <h2 style="margin:0;">Product Management</h2>
             <button class="btn btn-primary" onclick="showAddProductModal()">Add Product</button>
           </div>
           <div class="search-box">
-            <input type="text" id="productSearch" placeholder="Search products..." onkeyup="searchProducts()">
+            <input type="text" id="productSearch" placeholder="Search products..." oninput="searchProducts()">
           </div>
           <table>
             <thead><tr><th>Name</th><th>Category</th><th>Quantity</th><th>Cost (₹)</th><th>Selling (₹)</th><th>Supplier</th><th>SKU</th><th>Actions</th></tr></thead>
@@ -196,36 +181,21 @@
 
           <div class="card">
             <h2>Billing Details</h2>
-            <div class="form-group">
-              <label>Customer Name</label>
-              <input type="text" id="billCustomerName" placeholder="Customer name">
-            </div>
-            <div class="form-group">
-              <label>Customer Phone</label>
-              <input type="text" id="billCustomerPhone" placeholder="Phone number">
-            </div>
-            <div class="form-group">
-              <label>Tax (%)</label>
-              <input type="number" id="taxPercent" value="0" min="0" max="100" onchange="updateCart()">
-            </div>
-            <div class="form-group">
-              <label>Discount (₹)</label>
-              <input type="number" id="discountAmount" value="0" min="0" onchange="updateCart()">
-            </div>
+            <div class="form-group"><label>Customer Name</label><input type="text" id="billCustomerName" placeholder="Customer name"></div>
+            <div class="form-group"><label>Customer Phone</label><input type="text" id="billCustomerPhone" placeholder="Phone number"></div>
+            <div class="form-group"><label>Tax (%)</label><input type="number" id="taxPercent" value="0" min="0" max="100" onchange="updateCart()"></div>
+            <div class="form-group"><label>Discount (₹)</label><input type="number" id="discountAmount" value="0" min="0" onchange="updateCart()"></div>
 
-            <div class="cart-total">
+            <div class="cart-total" style="margin-top:8px">
               <div class="total-row"><span>Subtotal:</span><span id="subtotal">₹0</span></div>
               <div class="total-row"><span>Tax:</span><span id="taxAmount">₹0</span></div>
               <div class="total-row"><span>Discount:</span><span id="discount">₹0</span></div>
               <div class="total-row grand"><span>Grand Total:</span><span id="grandTotal">₹0</span></div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style="margin-top:8px">
               <label>Payment Mode</label>
-              <select id="paymentMode">
-                <option value="cash">Cash</option>
-                <option value="online">Online</option>
-              </select>
+              <select id="paymentMode"><option value="cash">Cash</option><option value="online">Online</option></select>
             </div>
 
             <div class="form-group">
@@ -236,8 +206,8 @@
               </select>
             </div>
 
-            <button class="btn btn-success" style="width:100%;margin-top:20px;" onclick="completeSale()">Complete Sale</button>
-            <button class="btn btn-secondary" style="width:100%;margin-top:10px;" onclick="clearCart()">Clear Cart</button>
+            <button class="btn btn-success" style="width:100%;margin-top:10px;" onclick="completeSale()">Complete Sale</button>
+            <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="clearCart()">Clear Cart</button>
           </div>
         </div>
       </div>
@@ -245,12 +215,12 @@
       <!-- Customers -->
       <div id="customers" class="tab-content">
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <h2 style="margin:0;">Customer Management</h2>
             <button class="btn btn-primary" onclick="showAddCustomerModal()">Add Customer</button>
           </div>
           <div class="search-box">
-            <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="searchCustomers()">
+            <input type="text" id="customerSearch" placeholder="Search customers..." oninput="searchCustomers()">
           </div>
           <table>
             <thead><tr><th>Name</th><th>Contact</th><th>Address</th><th>Total Purchases (₹)</th><th>Actions</th></tr></thead>
@@ -262,9 +232,14 @@
       <!-- Reports -->
       <div id="reports" class="tab-content">
         <div class="card">
-          <h2>Sales Report</h2>
-          <div class="chart-container"><div id="salesChart"></div></div>
+          <h2>Sales Report (This Month)</h2>
+          <div class="stats-grid">
+            <div class="stat-card green"><div class="stat-label">This Month Revenue (₹)</div><div class="stat-value" id="monthRevenue">0</div></div>
+            <div class="stat-card"><div class="stat-label">This Month Transactions</div><div class="stat-value" id="monthTransactions">0</div></div>
+            <div class="stat-card purple"><div class="stat-label">Average Sale (₹)</div><div class="stat-value" id="avgSale">0</div></div>
+          </div>
         </div>
+
         <div class="card">
           <h2>Best Selling Products</h2>
           <table>
@@ -272,29 +247,17 @@
             <tbody id="bestSellersTable"></tbody>
           </table>
         </div>
-        <div class="card">
-          <h2>Monthly Summary</h2>
-          <div class="stats-grid">
-            <div class="stat-card green"><div class="stat-label">This Month Revenue (₹)</div><div class="stat-value" id="monthRevenue">0</div></div>
-            <div class="stat-card"><div class="stat-label">This Month Transactions</div><div class="stat-value" id="monthTransactions">0</div></div>
-            <div class="stat-card purple"><div class="stat-label">Average Sale (₹)</div><div class="stat-value" id="avgSale">0</div></div>
-          </div>
-        </div>
       </div>
 
       <!-- Export -->
       <div id="export" class="tab-content">
         <div class="card">
           <h2>Export Data</h2>
-          <p style="color:#666;margin-bottom:20px;">Download your data for backup or external use.</p>
-          <div style="display:flex;gap:15px;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="exportData('products','json')">Export Products (JSON)</button>
-            <button class="btn btn-primary" onclick="exportData('products','csv')">Export Products (CSV)</button>
-            <button class="btn btn-success" onclick="exportData('customers','json')">Export Customers (JSON)</button>
-            <button class="btn btn-success" onclick="exportData('customers','csv')">Export Customers (CSV)</button>
-            <button class="btn btn-secondary" onclick="exportData('transactions','json')">Export Transactions (JSON)</button>
-            <button class="btn btn-secondary" onclick="exportData('transactions','csv')">Export Transactions (CSV)</button>
-            <button class="btn btn-danger" onclick="exportData('all','json')">Export All Data (JSON)</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="exportData('products')">Export Products (JSON)</button>
+            <button class="btn btn-success" onclick="exportData('customers')">Export Customers (JSON)</button>
+            <button class="btn btn-secondary" onclick="exportData('transactions')">Export Transactions (JSON)</button>
+            <button class="btn btn-danger" onclick="exportAll()">Export All Data (JSON)</button>
           </div>
         </div>
       </div>
@@ -303,7 +266,6 @@
       <div id="import" class="tab-content">
         <div class="card">
           <h2>Import Data</h2>
-          <p style="color:#666;margin-bottom:20px;">Restore your data from previously exported files.</p>
           <div class="form-group">
             <label>Select Data Type</label>
             <select id="importType">
@@ -330,18 +292,12 @@
         <h3 id="productModalTitle">Add Product</h3>
         <button class="close-btn" onclick="closeProductModal()">&times;</button>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label>Product Name *</label><input type="text" id="productName"></div>
-        <div class="form-group"><label>Category *</label><input type="text" id="productCategory"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Quantity *</label><input type="number" id="productQuantity" min="0"></div>
-        <div class="form-group"><label>Cost Price (₹) *</label><input type="number" id="productCost" min="0" step="0.01"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Selling Price (₹) *</label><input type="number" id="productSelling" min="0" step="0.01"></div>
-        <div class="form-group"><label>Supplier</label><input type="text" id="productSupplier"></div>
-      </div>
+      <div class="form-group"><label>Product Name *</label><input type="text" id="productName"></div>
+      <div class="form-group"><label>Category *</label><input type="text" id="productCategory"></div>
+      <div class="form-group"><label>Quantity *</label><input type="number" id="productQuantity" min="0" value="0"></div>
+      <div class="form-group"><label>Cost Price (₹) *</label><input type="number" id="productCost" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Selling Price (₹) *</label><input type="number" id="productSelling" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Supplier</label><input type="text" id="productSupplier"></div>
       <div class="form-group"><label>SKU/Barcode</label><input type="text" id="productSKU"></div>
       <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
     </div>
@@ -355,12 +311,11 @@
       </div>
       <div class="form-group"><label>Customer Name *</label><input type="text" id="customerName"></div>
       <div class="form-group"><label>Contact Number *</label><input type="text" id="customerContact"></div>
-      <div class="form-group"><label>Address</label><textarea id="customerAddress" rows="3" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-family:inherit;"></textarea></div>
+      <div class="form-group"><label>Address</label><input type="text" id="customerAddress"></div>
       <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div id="settingsModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -368,7 +323,7 @@
         <button class="close-btn" onclick="closeSettings()">&times;</button>
       </div>
       <div class="form-group"><label>Store Name</label><input id="setName" placeholder="Techverse Solution"></div>
-      <div class="form-group"><label>Address</label><textarea id="setAddress" rows="2"></textarea></div>
+      <div class="form-group"><label>Address</label><input id="setAddress" placeholder="Street, City"></div>
       <div class="form-group"><label>Contact</label><input id="setContact" placeholder="+91-..."></div>
       <div class="form-group"><label>GST %</label><input id="setGST" type="number" min="0" max="100" step="0.01" placeholder="18"></div>
       <div class="form-group"><label>Print Mode</label>
@@ -380,7 +335,6 @@
     </div>
   </div>
 
-  <!-- Invoice Modal -->
   <div id="invoiceModal" class="modal">
     <div class="modal-content" style="max-width:900px;">
       <div class="modal-header">
@@ -388,7 +342,7 @@
         <button class="close-btn" onclick="closeInvoiceModal()">&times;</button>
       </div>
       <div id="invoiceContent"></div>
-      <div style="margin-top:20px;display:flex;gap:10px;">
+      <div style="margin-top:12px;display:flex;gap:10px;">
         <button class="btn btn-primary" onclick="printInvoice()">Print Invoice</button>
         <button class="btn btn-secondary" onclick="closeInvoiceModal()">Close</button>
       </div>
@@ -402,23 +356,21 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <script>
-  // ===== Firebase =====
+  /* ===== Firebase Config (your project) ===== */
   const firebaseConfig = {
     apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
     authDomain: "techverse-ca88a.firebaseapp.com",
-    databaseURL: "https://techverse-ca88a-default-rtdb.firebaseio.com",
     projectId: "techverse-ca88a",
-    storageBucket: "techverse-ca88a.firebasestorage.app",
+    storageBucket: "techverse-ca88a.appspot.com", // ✅ use appspot.com
     messagingSenderId: "288969741715",
-    appId: "1:288969741715:web:03ddb8b82da9224e234466",
-    measurementId: "G-33XTL4HJR9"
+    appId: "1:288969741715:web:03ddb8b82da9224e234466"
   };
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
   const storage = firebase.storage();
 
-  // ===== Helpers & State =====
+  /* ===== Helpers & State ===== */
   const $ = id => document.getElementById(id);
   const toastEl = $('toast');
   let UID = null;
@@ -448,151 +400,80 @@
     if (id==='pos') rebuildPOSSelectors();
     if (id==='reports') loadReports();
   }
-// ===== Auth (Login only) =====
-$('loginBtn').addEventListener('click', async () => {
-  const recaptchaResponse = grecaptcha.getResponse();
-  if (!recaptchaResponse) {
-    showToast('Please complete the reCAPTCHA check', 'error');
-    return;
-  }
 
-  const email = $('loginEmail').value.trim();
-  const pass = $('loginPassword').value.trim();
-
-  try {
-    // Attempt login
-    await auth.signInWithEmailAndPassword(email, pass);
-    showToast('✅ Login successful! Redirecting...');
-  } catch (err) {
-    console.error("Login Error:", err);
-
-    // Smart error handling
-    if (err.code === 'auth/user-not-found') {
-      showToast('❌ No account found with this email. Please contact the admin.', 'error');
-    } 
-    else if (err.code === 'auth/wrong-password') {
-      showToast('⚠️ Incorrect password. Please try again.', 'error');
-    } 
-    else if (err.code === 'auth/too-many-requests') {
-      showToast('🚫 Too many failed attempts. Try again later.', 'error');
-    } 
-    else if (err.code === 'auth/invalid-email') {
-      showToast('📧 Invalid email format.', 'error');
+  /* ===== Auth (no reCAPTCHA) ===== */
+  $('loginBtn').addEventListener('click', async ()=>{
+    const email = $('loginEmail').value.trim();
+    const pass = $('loginPassword').value.trim();
+    try{
+      await auth.signInWithEmailAndPassword(email, pass);
+      showToast('Login successful!');
+    }catch(err){
+      showToast(err.message || 'Login failed','error');
     }
-    else {
-      showToast(err.message || 'Login failed', 'error');
+  });
+  $('logoutBtn').addEventListener('click', ()=>auth.signOut());
+
+  auth.onAuthStateChanged(async (u)=>{
+    if(!u){
+      UID = null;
+      $('loginContainer').style.display='flex';
+      $('appContainer').style.display='none';
+      return;
     }
-  }
-});
+    UID = u.uid;
+    $('userInfo').textContent = u.email;
+    $('loginContainer').style.display='none';
+    $('appContainer').style.display='block';
 
-// Logout
-$('logoutBtn').addEventListener('click', () => auth.signOut());
+    const userRoot = db.collection('users').doc(UID);
 
-// Auth state listener
-auth.onAuthStateChanged(async (u) => {
-  if (!u) {
-    UID = null;
-    $('loginContainer').style.display = 'flex';
-    $('appContainer').style.display = 'none';
-    return;
-  }
+    try{
+      // ensure settings doc
+      const setRef = userRoot.collection('meta').doc('settings');
+      const snap = await setRef.get();
+      if(!snap.exists){
+        await setRef.set(settings);
+      }else{
+        settings = { ...settings, ...snap.data() };
+      }
 
-  // User logged in
-  UID = u.uid;
-  $('userInfo').textContent = u.email;
-  $('loginContainer').style.display = 'none';
-  $('appContainer').style.display = 'block';
-
-  // Initialize this user's data space
-  const userRoot = db.collection('users').doc(UID);
-
-  try {
-    // ✅ Ensure user settings exist
-    const setRef = userRoot.collection('meta').doc('settings');
-    const snap = await setRef.get();
-    if (!snap.exists) {
-      await setRef.set(settings); // default store settings
-    } else {
-      settings = { ...settings, ...snap.data() };
-    }
-
-    // ✅ Load products, customers, transactions in real-time
-    userRoot.collection('products').onSnapshot(qs => {
-      products = qs.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => !p.deleted);
-      renderProducts();
-      rebuildPOSSelectors();
-    });
-
-    userRoot.collection('customers').onSnapshot(qs => {
-      customers = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderCustomers();
-    });
-
-    userRoot.collection('transactions').orderBy('createdAt', 'desc').limit(200)
-      .onSnapshot(qs => {
-        transactions = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-        loadDashboard();
+      // listeners (scoped to this UID)
+      userRoot.collection('products').onSnapshot(qs=>{
+        products = qs.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.deleted);
+        renderProducts();
+        rebuildPOSSelectors();
       });
 
-    showToast(`Welcome, ${u.email}`);
-    console.log("✅ Private data space loaded for UID:", UID);
-
-  } catch (e) {
-    console.error("🔥 Firestore init error:", e);
-    showToast("Error loading user data: " + e.message, "error");
-  }
-});
-
-
-    // Ensure settings doc exists
-    const setRef = db.collection('users').doc(UID).collection('meta').doc('settings');
-    const snap = await setRef.get();
-    if(!snap.exists){
-      await setRef.set(settings);
-    }else{
-      settings = { ...settings, ...snap.data() };
-    }
-    // apply print mode to POS selector
-    $('printModeSelect').value = settings.printMode || 'normal';
-    applyPrintModeClass();
-
-    // Live listeners
-    db.collection('users').doc(UID).collection('meta').doc('settings')
-      .onSnapshot(s=>{ if(s.exists){ settings = { ...settings, ...s.data() }; $('printModeSelect').value = settings.printMode||'normal'; }});
-
-  // ✅ FIXED Product Listener (shows all unless deleted=true)
-db.collection('users').doc(UID).collection('products')
-  .onSnapshot(qs => {
-    products = qs.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(p => !p.deleted); // show all if deleted is not true
-    renderProducts();
-    rebuildPOSSelectors();
-  });
-// ✅ Listen for all sales from root-level "sales" collection
-db.collection('sales')
-  .orderBy('createdAt', 'desc')
-  .limit(200)
-  .onSnapshot(qs => {
-    transactions = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-    loadDashboard();
-  });
-
-
-    db.collection('users').doc(UID).collection('customers')
-      .onSnapshot(qs=>{
+      userRoot.collection('customers').onSnapshot(qs=>{
         customers = qs.docs.map(d=>({id:d.id,...d.data()}));
         renderCustomers();
       });
 
-    db.collection('users').doc(UID).collection('transactions')
-      .orderBy('createdAt','desc').limit(200).onSnapshot(qs=>{
+      userRoot.collection('transactions').orderBy('createdAt','desc').limit(200).onSnapshot(qs=>{
         transactions = qs.docs.map(d=>({id:d.id,...d.data()}));
         loadDashboard();
       });
+
+      // set POS GST default
+      $('taxPercent').value = settings.gst || 0;
+      $('printModeSelect').value = settings.printMode || 'normal';
+      applyPrintModeClass();
+
+      userRoot.collection('meta').doc('settings').onSnapshot(s=>{
+        if(s.exists){
+          settings = { ...settings, ...s.data() };
+          $('printModeSelect').value = settings.printMode || 'normal';
+        }
+      });
+
+      showToast(Welcome, ${u.email});
+    }catch(e){
+      showToast('Error loading data: '+(e.message||e),'error');
+    }
   });
 
-  // ===== Settings (Store Header) =====
+  /* ===== Settings ===== */
   function openSettings(){
     $('setName').value = settings.name || 'Techverse Solution';
     $('setAddress').value = settings.address || '';
@@ -615,7 +496,8 @@ db.collection('sales')
 
       const file = $('logoFile').files[0];
       if(file){
-        const ref = storage.ref().child(`users/${UID}/logo_${Date.now()}.${(file.name.split('.').pop()||'png')}`);
+        const ext = (file.name.split('.').pop()||'png').toLowerCase();
+        const ref = storage.ref().child(users/${UID}/logo_${Date.now()}.${ext});
         await ref.put(file);
         logoUrl = await ref.getDownloadURL();
         $('setLogoUrl').value = logoUrl;
@@ -637,15 +519,15 @@ db.collection('sales')
     document.body.classList.add(settings.printMode==='thermal'?'print-thermal':'print-normal');
   }
 
-  // ===== Products =====
+  /* ===== Products ===== */
   function showAddProductModal(){
     editingProductId = null;
     $('productModalTitle').textContent = 'Add Product';
     $('productName').value = '';
     $('productCategory').value = '';
-    $('productQuantity').value = '';
-    $('productCost').value = '';
-    $('productSelling').value = '';
+    $('productQuantity').value = 0;
+    $('productCost').value = 0;
+    $('productSelling').value = 0;
     $('productSupplier').value = '';
     $('productSKU').value = '';
     $('productModal').classList.add('active');
@@ -678,6 +560,26 @@ db.collection('sales')
     }catch(e){ showToast(e.message||'Error saving product','error'); }
   }
 
+  function editProduct(id){
+    const p = products.find(x=>x.id===id); if(!p) return;
+    editingProductId = id;
+    $('productModalTitle').textContent = 'Edit Product';
+    $('productName').value = p.name||'';
+    $('productCategory').value = p.category||'';
+    $('productQuantity').value = p.quantity??0;
+    $('productCost').value = p.cost??0;
+    $('productSelling').value = p.selling??0;
+    $('productSupplier').value = p.supplier||'';
+    $('productSKU').value = p.sku||'';
+    $('productModal').classList.add('active');
+  }
+
+  async function deleteProduct(id){
+    if(!confirm('Delete this product?')) return;
+    await db.collection('users').doc(UID).collection('products').doc(id).set({deleted:true},{merge:true});
+    showToast('Product deleted');
+  }
+
   function renderProducts(){
     $('totalProducts').textContent = products.length;
     const lowStock = products.filter(p=> (p.quantity??0) < 10);
@@ -699,7 +601,6 @@ db.collection('sales')
       </tr>`).join('');
     $('productsTable').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;">No products found</td></tr>';
 
-    // Low stock table on dashboard
     $('lowStockTable').innerHTML = lowStock.map(p=>`
       <tr><td>${p.name}</td><td>${p.category}</td><td><span class="low-stock">${p.quantity??0}</span></td><td>${p.sku||'-'}</td></tr>
     `).join('') || '<tr><td colspan="4" style="text-align:center;">All products well stocked</td></tr>';
@@ -726,27 +627,7 @@ db.collection('sales')
     `).join('') || '<tr><td colspan="8" style="text-align:center;">No products</td></tr>';
   }
 
-  function editProduct(id){
-    const p = products.find(x=>x.id===id); if(!p) return;
-    editingProductId = id;
-    $('productModalTitle').textContent = 'Edit Product';
-    $('productName').value = p.name||'';
-    $('productCategory').value = p.category||'';
-    $('productQuantity').value = p.quantity??0;
-    $('productCost').value = p.cost??0;
-    $('productSelling').value = p.selling??0;
-    $('productSupplier').value = p.supplier||'';
-    $('productSKU').value = p.sku||'';
-    $('productModal').classList.add('active');
-  }
-
-  async function deleteProduct(id){
-    if(!confirm('Delete this product?')) return;
-    await db.collection('users').doc(UID).collection('products').doc(id).set({deleted:true},{merge:true});
-    showToast('Product deleted');
-  }
-
-  // ===== Customers =====
+  /* ===== Customers ===== */
   function showAddCustomerModal(){
     editingCustomerId = null;
     $('customerModalTitle').textContent = 'Add Customer';
@@ -773,6 +654,22 @@ db.collection('sales')
       }
       closeCustomerModal();
     }catch(e){ showToast(e.message||'Error saving customer','error'); }
+  }
+
+  function editCustomer(id){
+    const c = customers.find(x=>x.id===id); if(!c) return;
+    editingCustomerId = id;
+    $('customerModalTitle').textContent = 'Edit Customer';
+    $('customerName').value = c.name||'';
+    $('customerContact').value = c.contact||'';
+    $('customerAddress').value = c.address||'';
+    $('customerModal').classList.add('active');
+  }
+
+  async function deleteCustomer(id){
+    if(!confirm('Delete this customer?')) return;
+    await db.collection('users').doc(UID).collection('customers').doc(id).delete();
+    showToast('Customer deleted');
   }
 
   function renderCustomers(){
@@ -804,30 +701,13 @@ db.collection('sales')
     `).join('') || '<tr><td colspan="5" style="text-align:center;">No customers</td></tr>';
   }
 
-  function editCustomer(id){
-    const c = customers.find(x=>x.id===id); if(!c) return;
-    editingCustomerId = id;
-    $('customerModalTitle').textContent = 'Edit Customer';
-    $('customerName').value = c.name||'';
-    $('customerContact').value = c.contact||'';
-    $('customerAddress').value = c.address||'';
-    $('customerModal').classList.add('active');
-  }
-
-  async function deleteCustomer(id){
-    if(!confirm('Delete this customer?')) return;
-    await db.collection('users').doc(UID).collection('customers').doc(id).delete();
-    showToast('Customer deleted');
-  }
-
-  // ===== POS / Cart =====
+  /* ===== POS / Cart ===== */
   function rebuildPOSSelectors(){
     const opts = ['<option value="">-- Select Product --</option>']
       .concat(products.filter(p=> (p.quantity??0) > 0)
-        .map(p=>`<option value="${p.id}">${p.name} - ₹${Number(p.selling||0).toFixed(2)} (Stock: ${p.quantity??0})</option>`));
+        .map(p=><option value="${p.id}">${p.name} - ₹${Number(p.selling||0).toFixed(2)} (Stock: ${p.quantity??0})</option>));
     $('posProductSelect').innerHTML = opts.join('');
   }
-
   function addToCart(){
     const id = $('posProductSelect').value; if(!id) return;
     const p = products.find(x=>x.id===id); if(!p) return;
@@ -891,8 +771,6 @@ db.collection('sales')
 
     const customerName = $('billCustomerName').value.trim() || 'Walk-in';
     const customerPhone = $('billCustomerPhone').value.trim();
-
-    // ensure settings.gst appears by default in POS tax field if empty
     const gstDefault = settings.gst || 0;
     const taxPercent = Number($('taxPercent').value || gstDefault || 0);
     const discount = Number($('discountAmount').value || 0);
@@ -914,7 +792,6 @@ db.collection('sales')
         });
         customerId = doc.id;
       }
-      // increment total purchases
       if(customerId){
         await db.collection('users').doc(UID).collection('customers').doc(customerId)
           .set({ totalPurchases: firebase.firestore.FieldValue.increment(total) },{merge:true});
@@ -942,70 +819,28 @@ db.collection('sales')
     }
 
     // Show invoice
-    viewInvoice((await txRef.get()).data().invoiceNumber, true);
+    const tx = (await txRef.get()).data();
+    viewInvoice(tx.invoiceNumber, true);
     clearCart();
     showToast('Sale completed');
   }
 
-  // ===== Dashboard / Reports =====
-function loadDashboard() {
-  // 🧮 Total Sales (in ₹)
-  const totalSales = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
-  $('totalSales').textContent = totalSales.toFixed(2);
+  /* ===== Dashboard / Reports ===== */
+  function loadDashboard(){
+    const totalSales = transactions.reduce((s,t)=> s + (t.total||0), 0);
+    $('totalSales').textContent = totalSales.toFixed(2);
 
-  // 🕓 Recent Transactions (last 5)
-  const recents = [...transactions].slice(0, 5);
-  $('recentTransactions').innerHTML =
-    recents.map(t => `
+    const recents = [...transactions].slice(0,5);
+    $('recentTransactions').innerHTML = recents.map(t=>`
       <tr>
         <td>${t.invoiceNumber || t.id}</td>
-        <td>${
-          t.createdAt && t.createdAt.toDate
-            ? new Date(t.createdAt.toDate()).toLocaleDateString()
-            : (t.date ? new Date(t.date).toLocaleDateString() : '-')
-        }</td>
+        <td>${ t.createdAt && t.createdAt.toDate ? new Date(t.createdAt.toDate()).toLocaleDateString()
+              : (t.date ? new Date(t.date).toLocaleDateString() : '-') }</td>
         <td>${t.customerName || 'Walk-in'}</td>
         <td>₹${Number(t.total || 0).toFixed(2)}</td>
         <td><button class="btn btn-sm btn-primary" onclick="viewInvoice('${t.invoiceNumber || t.id}')">View</button></td>
       </tr>
-    `).join('') ||
-    '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
-}
-
-
-  // (Keeping your simple SVG chart util)
-  function drawSalesChart(data){
-    const chartContainer = $('salesChart');
-    const width = chartContainer.parentElement.clientWidth || 800;
-    const height = 300;
-    const padding = { top: 40, right: 40, bottom: 60, left: 60 };
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
-    const maxValue = Math.max(...data.map(d => d.sales), 1);
-    const step = chartWidth / (data.length - 1 || 1);
-    let svg = `<svg width="100%" height="${height}" style="font-family: inherit;">`;
-    svg += `<rect x="${padding.left}" y="${padding.top}" width="${chartWidth}" height="${chartHeight}" fill="#f9fafb" rx="4"/>`;
-    for (let i = 0; i <= 4; i++) {
-      const y = padding.top + (chartHeight * i / 4);
-      const value = (maxValue * (4 - i) / 4).toFixed(0);
-      svg += `<line x1="${padding.left}" y1="${y}" x2="${padding.left + chartWidth}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
-      svg += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" fill="#6b7280">₹${value}</text>`;
-    }
-    let pathData = ''; let areaPath = '';
-    data.forEach((d,i)=>{
-      const x = padding.left + (i * step);
-      const y = padding.top + chartHeight - ((d.sales / maxValue) * chartHeight);
-      if(i===0){ pathData = `M ${x} ${y}`; areaPath = `M ${x} ${padding.top + chartHeight} L ${x} ${y}`; }
-      else{ pathData += ` L ${x} ${y}`; areaPath += ` L ${x} ${y}`; }
-      svg += `<circle cx="${x}" cy="${y}" r="4" fill="#2563eb"/>`;
-      svg += `<text x="${x}" y="${padding.top + chartHeight + 20}" text-anchor="middle" font-size="12" fill="#374151">${d.month}</text>`;
-    });
-    areaPath += ` L ${padding.left + ((data.length - 1) * step)} ${padding.top + chartHeight} Z`;
-    svg += `<path d="${areaPath}" fill="rgba(37, 99, 235, 0.1)" stroke="none"/>`;
-    svg += `<path d="${pathData}" fill="none" stroke="#2563eb" stroke-width="3"/>`;
-    svg += `<text x="${width/2}" y="25" text-anchor="middle" font-size="14" font-weight="600" fill="#2563eb">Sales (₹) - Last 6 Months</text>`;
-    svg += `</svg>`;
-    chartContainer.innerHTML = svg;
+    `).join('') || '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
   }
 
   function loadReports(){
@@ -1016,29 +851,22 @@ function loadDashboard() {
     $('monthTransactions').textContent = monthTx.length;
     $('avgSale').textContent = monthTx.length>0 ? (monthRevenue/monthTx.length).toFixed(2) : '0';
 
-    const last6 = [];
-    for(let i=5;i>=0;i--){
-      const d = new Date(currentYear, currentMonth - i, 1);
-      const label = d.toLocaleString('default',{month:'short'});
-      const msum = transactions.filter(t=>{const td=new Date(t.date);return td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear();})
-                      .reduce((s,t)=>s+(t.total||0),0);
-      last6.push({month:label,sales:msum});
-    }
-    drawSalesChart(last6);
-
-    const best = [...products].filter(p=> (p.soldQuantity||0)>0).sort((a,b)=> (b.soldQuantity||0)-(a.soldQuantity||0)).slice(0,10);
+    const best = [...products]
+      .filter(p=> (p.soldQuantity||0)>0)
+      .sort((a,b)=> (b.soldQuantity||0)-(a.soldQuantity||0))
+      .slice(0,10);
     $('bestSellersTable').innerHTML = best.map(p=>`
       <tr><td>${p.name}</td><td>${p.category||'-'}</td><td>${p.soldQuantity||0}</td><td>₹${Number((p.soldQuantity||0)* (p.selling||0)).toFixed(2)}</td></tr>
     `).join('') || '<tr><td colspan="4" style="text-align:center;">No sales data</td></tr>';
   }
 
-  // ===== Invoice =====
+  /* ===== Invoice ===== */
   async function viewInvoice(invoiceNumber, openImmediately=false){
     const qs = await db.collection('users').doc(UID).collection('transactions').where('invoiceNumber','==',invoiceNumber).limit(1).get();
     if(qs.empty){ return showToast('Invoice not found','error'); }
     const t = qs.docs[0].data();
 
-    const s = settings; // store header
+    const s = settings;
     const itemsHtml = (t.items||[]).map(it=>`
       <tr>
         <td>${it.name}</td>
@@ -1048,16 +876,16 @@ function loadDashboard() {
       </tr>
     `).join('');
 
-    const headerLogo = s.logoUrl ? `<img src="${s.logoUrl}" alt="logo" style="max-height:60px;display:block;margin:0 auto 8px;"/>` : '';
-    const gstLine = Number(s.gst||0) > 0 ? `<div><strong>GST (${s.gst}%):</strong> ₹${Number(t.taxAmount||0).toFixed(2)}</div>` : '';
+    const headerLogo = s.logoUrl ? <img src="${s.logoUrl}" alt="logo" style="max-height:60px;display:block;margin:0 auto 8px;"/> : '';
+    const gstLine = Number(s.gst||0) > 0 ? <div><strong>GST (${s.gst}%):</strong> ₹${Number(t.taxAmount||0).toFixed(2)}</div> : '';
 
     const html = `
       <div class="invoice">
         <div class="invoice-header">
           ${headerLogo}
           <h1>${s.name || 'Techverse Solution'}</h1>
-          ${s.address ? `<div style="color:#555">${s.address}</div>`:''}
-          ${s.contact ? `<div style="color:#555">${s.contact}</div>`:''}
+          ${s.address ? <div style="color:#555">${s.address}</div>:''}
+          ${s.contact ? <div style="color:#555">${s.contact}</div>:''}
         </div>
         <div class="invoice-details">
           <div>
@@ -1067,64 +895,64 @@ function loadDashboard() {
           </div>
           <div style="text-align:right;">
             <strong>Customer:</strong> ${t.customerName || 'Walk-in'}<br>
-            ${t.customerPhone ? `<strong>Phone:</strong> ${t.customerPhone}<br>`:''}
+            ${t.customerPhone ? <strong>Phone:</strong> ${t.customerPhone}<br>:''}
             <strong>Total Amount</strong><br>
-            <span style="font-size:24px;color:#2563eb;">₹${Number(t.total||0).toFixed(2)}</span>
+            <span style="font-size:22px;color:#2563eb;">₹${Number(t.total||0).toFixed(2)}</span>
           </div>
         </div>
         <table style="width:100%;border-collapse:collapse;">
-          <thead><tr><th style="text-align:left;padding:8px;background:#f3f4f6;">Product</th><th style="text-align:left;padding:8px;background:#f3f4f6;">Quantity</th><th style="text-align:left;padding:8px;background:#f3f4f6;">Price (₹)</th><th style="text-align:left;padding:8px;background:#f3f4f6;">Subtotal (₹)</th></tr></thead>
+          <thead><tr><th style="text-align:left;padding:8px;background:#f3f4f6;">Product</th><th style="text-align:left;padding:8px;background:#f3f4f6;">Qty</th><th style="text-align:left;padding:8px;background:#f3f4f6;">Price (₹)</th><th style="text-align:left;padding:8px;background:#f3f4f6;">Subtotal (₹)</th></tr></thead>
           <tbody>${itemsHtml}</tbody>
         </table>
-        <div style="margin-top:20px;text-align:right;">
-          <div style="margin-bottom:8px;"><strong>Subtotal:</strong> ₹${Number(t.subtotal||0).toFixed(2)}</div>
+        <div style="margin-top:14px;text-align:right;">
+          <div style="margin-bottom:6px;"><strong>Subtotal:</strong> ₹${Number(t.subtotal||0).toFixed(2)}</div>
           ${gstLine}
-          <div style="margin-bottom:8px;"><strong>Discount:</strong> ₹${Number(t.discount||0).toFixed(2)}</div>
-          <div style="font-size:20px;color:#2563eb;"><strong>Grand Total:</strong> ₹${Number(t.total||0).toFixed(2)}</div>
+          <div style="margin-bottom:6px;"><strong>Discount:</strong> ₹${Number(t.discount||0).toFixed(2)}</div>
+          <div style="font-size:18px;color:#2563eb;"><strong>Grand Total:</strong> ₹${Number(t.total||0).toFixed(2)}</div>
         </div>
-        <div style="margin-top:30px;text-align:center;color:#666;font-size:12px;">Thank you for your business!</div>
+        <div style="margin-top:18px;text-align:center;color:#666;font-size:12px;">Thank you for your business!</div>
       </div>
     `;
     $('invoiceContent').innerHTML = html;
     $('invoiceModal').classList.add('active');
-
-    // apply print class
-    document.body.classList.remove('print-thermal','print-normal');
-    document.body.classList.add((settings.printMode||'normal')==='thermal' ? 'print-thermal' : 'print-normal');
-
-    if(openImmediately===true){ /* already opened */ }
   }
-
   function closeInvoiceModal(){ $('invoiceModal').classList.remove('active'); }
   function printInvoice(){ window.print(); }
 
-  // ===== Export / Import (JSON only for Firestore schema) =====
-  async function exportData(type, fmt){
+  /* ===== Export / Import ===== */
+  async function exportData(type){
     try{
       const base = db.collection('users').doc(UID);
-      let data, filename = `techverse_${type}`;
-      if(type==='all'){
-        const prods = await base.collection('products').get();
-        const custs = await base.collection('customers').get();
-        const txs = await base.collection('transactions').get();
-        data = {
-          settings, products: prods.docs.map(d=>({id:d.id,...d.data()})),
-          customers: custs.docs.map(d=>({id:d.id,...d.data()})),
-          transactions: txs.docs.map(d=>({id:d.id,...d.data()})),
-        };
-        filename = 'techverse_all_data';
-      }else{
-        const coll = await base.collection(type).get();
-        data = coll.docs.map(d=>({id:d.id,...d.data()}));
-      }
-
-      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `${filename}.json`; document.body.appendChild(a); a.click();
-      a.remove(); URL.revokeObjectURL(url);
+      const coll = await base.collection(type).get();
+      const data = coll.docs.map(d=>({id:d.id,...d.data()}));
+      downloadJson(data, techverse_${type}.json);
       showToast('Data exported');
     }catch(e){ showToast('Export error: '+(e.message||e),'error'); }
+  }
+  async function exportAll(){
+    try{
+      const base = db.collection('users').doc(UID);
+      const [prods,custs,txs,settingsSnap] = await Promise.all([
+        base.collection('products').get(),
+        base.collection('customers').get(),
+        base.collection('transactions').get(),
+        base.collection('meta').doc('settings').get()
+      ]);
+      const data = {
+        settings: settingsSnap.exists ? settingsSnap.data() : {},
+        products: prods.docs.map(d=>({id:d.id,...d.data()})),
+        customers: custs.docs.map(d=>({id:d.id,...d.data()})),
+        transactions: txs.docs.map(d=>({id:d.id,...d.data()})),
+      };
+      downloadJson(data,'techverse_all_data.json');
+      showToast('All data exported');
+    }catch(e){ showToast('Export error: '+(e.message||e),'error'); }
+  }
+  function downloadJson(obj, filename){
+    const blob = new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+    a.remove(); URL.revokeObjectURL(url);
   }
 
   async function importData(){
@@ -1175,31 +1003,8 @@ function loadDashboard() {
       $('importFile').value = '';
     }catch(e){ showToast('Import error: '+(e.message||e),'error'); }
   }
-
-
-  // ===== init defaults =====
-  // Pre-fill POS tax with settings GST when available (after login it will update)
-  document.addEventListener('DOMContentLoaded', ()=>{
-    $('taxPercent').value = settings.gst || 0;
-  });
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-  <!-- Your Firebase config -->
-  <script src="firebase-config.js"></script>
-
-  <!-- Your main logic (the script already inside your HTML) -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("🔥 Firebase loaded:", typeof firebase !== 'undefined');
-      console.log("📦 Apps:", firebase.apps.length);
-    });
   </script>
 
-  <!-- reCAPTCHA (optional, you can comment it if not used) -->
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <!-- reCAPTCHA removed by request -->
 </body>
 </html>
