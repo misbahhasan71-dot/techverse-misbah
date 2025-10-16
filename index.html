@@ -1142,23 +1142,24 @@ function loadDashboard() {
   document.addEventListener('DOMContentLoaded', ()=>{
     $('taxPercent').value = settings.gst || 0;
   });
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-<!-- Your config -->
-<script src="config.js"></script>
+  <!-- Your Firebase config -->
+  <script src="firebase-config.js"></script>
 
-<!-- Your main logic -->
-<script src="main.js"></script>
+  <!-- Your main logic (the script already inside your HTML) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("🔥 Firebase loaded:", typeof firebase !== 'undefined');
+      console.log("📦 Apps:", firebase.apps.length);
+    });
+  </script>
 
-
-<!-- ✅ Your main application logic -->
-<script src="main.js"></script>
-
+  <!-- reCAPTCHA (optional, you can comment it if not used) -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
 </body>
 </html>
