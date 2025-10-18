@@ -564,17 +564,7 @@ auth.onAuthStateChanged(async (u) => {
 });
 
 
-    // Ensure settings doc exists
-    const setRef = db.collection('users').doc(UID).collection('meta').doc('settings');
-    const snap = await setRef.get();
-    if(!snap.exists){
-      await setRef.set(settings);
-    }else{
-      settings = { ...settings, ...snap.data() };
-    }
-    // apply print mode to POS selector
-    $('printModeSelect').value = settings.printMode || 'normal';
-    applyPrintModeClass();
+   
 
     // Live listeners
     db.collection('users').doc(UID).collection('meta').doc('settings')
