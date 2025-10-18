@@ -517,30 +517,35 @@ $('googleLoginBtn').addEventListener('click', async () => {
 });
 
 
-    // Attempt login
-    await auth.signInWithEmailAndPassword(email, pass);
+   // ===== Attempt login (Promise-based version) =====
+auth.signInWithEmailAndPassword(email, pass)
+  .then((userCredential) => {
+    // Signed in successfully
+    const user = userCredential.user;
+    console.log("✅ Login successful:", user.email);
     showToast('✅ Login successful! Redirecting...');
-  } catch (err) {
+
+    // You can perform redirection or show dashboard here if needed
+    // Example: $('loginContainer').style.display = 'none';
+    // $('appContainer').style.display = 'block';
+  })
+  .catch((err) => {
     console.error("Login Error:", err);
 
     // Smart error handling
     if (err.code === 'auth/user-not-found') {
-      showToast('❌ No account found with this email. Please contact the admin.', 'error');
-    } 
-    else if (err.code === 'auth/wrong-password') {
-      showToast('⚠️ Incorrect password. Please try again.', 'error');
-    } 
-    else if (err.code === 'auth/too-many-requests') {
+      showToast('❌ No account found with this email. Please contact admin.', 'error');
+    } else if (err.code === 'auth/wrong-password') {
+      showToast('⚠️ Incorrect password.', 'error');
+    } else if (err.code === 'auth/too-many-requests') {
       showToast('🚫 Too many failed attempts. Try again later.', 'error');
-    } 
-    else if (err.code === 'auth/invalid-email') {
+    } else if (err.code === 'auth/invalid-email') {
       showToast('📧 Invalid email format.', 'error');
-    }
-    else {
+    } else {
       showToast(err.message || 'Login failed', 'error');
     }
-  }
-});
+  });
+
 
 // Logout
 $('logoutBtn').addEventListener('click', () => auth.signOut());
