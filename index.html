@@ -1234,22 +1234,7 @@ function loadDashboard() {
   document.addEventListener('DOMContentLoaded', ()=>{
     $('taxPercent').value = settings.gst || 0;
   });
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <!-- Your Firebase config -->
-
-
-  <!-- Your main logic (the script already inside your HTML) -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("🔥 Firebase loaded:", typeof firebase !== 'undefined');
-      console.log("📦 Apps:", firebase.apps.length);
-    });
-  </script>
 <script>
 // === Password visibility toggle ===
 const togglePassword = document.getElementById("togglePassword");
