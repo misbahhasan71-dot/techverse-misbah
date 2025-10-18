@@ -642,7 +642,7 @@ db.collection('sales')
         transactions = qs.docs.map(d=>({id:d.id,...d.data()}));
         loadDashboard();
       });
-  });
+
 
   // ===== Settings (Store Header) =====
   function openSettings(){
