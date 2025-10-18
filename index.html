@@ -8,10 +8,10 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh}
-    .login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-    .login-box{background:white;padding:40px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);max-width:400px;width:100%}
-    .login-box h1{color:#2563eb;margin-bottom:10px;font-size:28px}
-    .login-box p{color:#666;margin-bottom:20px}
+    
+    
+    
+    
     .form-group{margin-bottom:16px}
     .form-group label{display:block;margin-bottom:6px;color:#333;font-weight:500}
     .form-group input{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px}
@@ -25,7 +25,7 @@
     .btn-danger{background:#ef4444;color:white}
     .btn-danger:hover{background:#dc2626}
     .btn-sm{padding:6px 12px;font-size:12px}
-    .app-container{display:none;background:#f3f4f6;min-height:100vh}
+    .app-container{background:#f3f4f6;min-height:100vh}
     .header{background:white;padding:16px 24px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
     .header h1{color:#2563eb;font-size:22px}
     .user-info{color:#555;font-size:14px}
@@ -84,110 +84,8 @@
 <body>
   <div id="toast" class="toast"></div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    // ===== Firebase Config =====
-    const firebaseConfig = {
-      apiKey: "AIzaSyCBN5AMN7j_qnlnwulFHvIeR1NmLyQ0OZo",
-      authDomain: "techverse-ca88a.firebaseapp.com",
-      databaseURL: "https://techverse-ca88a-default-rtdb.firebaseio.com",
-      projectId: "techverse-ca88a",
-      storageBucket: "techverse-ca88a.appspot.com",
-      messagingSenderId: "288969741715",
-      appId: "1:288969741715:web:03ddb8b82da9224e234466",
-      measurementId: "G-33XTL4HJR9"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    const $ = id => document.getElementById(id);
-    const toast = $('toast');
-    function showToast(msg, type='success') {
-      toast.textContent = msg;
-      toast.className = 'toast ' + type;
-      toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 2500);
-    }
-
-    let currentUser = null;
-
-    // ===== AUTH STATE CHECK =====
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        loadProducts();
-      } else {
-        window.location.href = "http://127.0.0.1:5500/techverse-login.html";
-      }
-    });
-
-    // ===== LOGOUT =====
-    $('logoutBtn').addEventListener('click', async () => {
-      await auth.signOut();
-      window.location.href = "http://127.0.0.1:5500/techverse-login.html";
-    });
-
-    // ===== PRODUCTS =====
-    $('addProductBtn').addEventListener('click', async () => {
-      const name = $('productName').value.trim();
-      const price = parseFloat($('productPrice').value.trim());
-      if (!name || isNaN(price)) return showToast("Enter valid name & price", "error");
-      try {
-        await db.collection("users").doc(currentUser.uid)
-          .collection("products").add({ name, price });
-        showToast("Product added!");
-        $('productName').value = '';
-        $('productPrice').value = '';
-        loadProducts();
-      } catch (err) {
-        showToast(err.message, "error");
-      }
-    });
-
-    async function loadProducts() {
-      const table = $('productTable');
-      table.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
-      try {
-        const snap = await db.collection("users").doc(currentUser.uid)
-          .collection("products").get();
-        if (snap.empty) {
-          table.innerHTML = '<tr><td colspan="3">No products found</td></tr>';
-          return;
-        }
-        let rows = '';
-        snap.forEach(doc => {
-          const d = doc.data();
-          rows += `
-            <tr>
-              <td>${d.name}</td>
-              <td>₹${d.price}</td>
-              <td class="actions">
-                <button class="btn-primary" onclick="deleteProduct('${doc.id}')">Delete</button>
-              </td>
-            </tr>`;
-        });
-        table.innerHTML = rows;
-      } catch (err) {
-        showToast(err.message, "error");
-      }
-    }
-
-    async function deleteProduct(id) {
-      try {
-        await db.collection("users").doc(currentUser.uid)
-          .collection("products").doc(id).delete();
-        showToast("Product deleted!");
-        loadProducts();
-      } catch (err) {
-        showToast(err.message, "error");
-      }
-    }
-  </script>
+  <!-- LOGIN -->
+  
 
   <!-- APP -->
   <div id="appContainer" class="app-container">
@@ -196,7 +94,7 @@
       <div style="display:flex;gap:8px;align-items:center">
         <span class="user-info" id="userInfo"></span>
         <button class="btn btn-secondary btn-sm" onclick="openSettings()">Store Settings</button>
-        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn" style="display:none;">Logout</button>
       </div>
     </div>
 
@@ -452,7 +350,7 @@
     const $ = id => document.getElementById(id);
     const toastEl = $('toast');
     const currency = n => '₹' + (Number(n)||0).toFixed(2);
-    const genId = (p='id') => p + '_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+    const genId = (p='id') => p + '' + Date.now() + '' + Math.floor(Math.random()*1e6);
 
     function showToast(msg, type='success'){
       toastEl.textContent = msg;
@@ -505,8 +403,7 @@
     const FIXED_PASSWORD = 'Techverse#123';
 
     function showApp(){
-      $('userInfo').textContent = SESSION.email || FIXED_EMAIL;
-      $('loginContainer').style.display='none';
+      $('userInfo').textContent = 'Techverse Admin';
       $('appContainer').style.display='block';
       $('taxPercent').value = settings.gst || 0;
       $('printModeSelect').value = settings.printMode || 'normal';
@@ -517,23 +414,9 @@
       rebuildPOSSelectors();
       loadReports();
     }
-    function showLogin(){
-      $('loginContainer').style.display='flex';
-      $('appContainer').style.display='none';
-    }
+    
 
-    $('loginBtn').addEventListener('click', ()=>{
-      const email = $('loginEmail').value.trim();
-      const pass = $('loginPassword').value.trim();
-      if(email===FIXED_EMAIL && pass===FIXED_PASSWORD){
-        SESSION = { loggedIn:true, email };
-        saveLS(LS_KEYS.session, SESSION);
-        showToast('Login successful!');
-        showApp();
-      }else{
-        showToast('Invalid email or password','error');
-      }
-    });
+    
 
     $('logoutBtn').addEventListener('click', ()=>{
       SESSION = { loggedIn:false, email:'' };
@@ -789,7 +672,7 @@
     function rebuildPOSSelectors(){
       const opts = ['<option value="">-- Select Product --</option>']
         .concat(products.filter(p=> (p.quantity??0) > 0)
-          .map(p=>`<option value="${p.id}">${p.name} - ₹${Number(p.selling||0).toFixed(2)} (Stock: ${p.quantity??0})</option>`));
+          .map(p=><option value="${p.id}">${p.name} - ₹${Number(p.selling||0).toFixed(2)} (Stock: ${p.quantity??0})</option>));
       $('posProductSelect').innerHTML = opts.join('');
     }
     function addToCart(){
@@ -966,16 +849,16 @@
         </tr>
       `).join('');
 
-      const headerLogo = s.logoUrl ? `<img src="${s.logoUrl}" alt="logo" style="max-height:60px;display:block;margin:0 auto 8px;"/>` : '';
-      const gstLine = Number(s.gst||0) > 0 ? `<div><strong>GST (${s.gst}%):</strong> ₹${Number(t.taxAmount||0).toFixed(2)}</div>` : '';
+      const headerLogo = s.logoUrl ? <img src="${s.logoUrl}" alt="logo" style="max-height:60px;display:block;margin:0 auto 8px;"/> : '';
+      const gstLine = Number(s.gst||0) > 0 ? <div><strong>GST (${s.gst}%):</strong> ₹${Number(t.taxAmount||0).toFixed(2)}</div> : '';
 
       const html = `
         <div class="invoice">
           <div class="invoice-header">
             ${headerLogo}
             <h1>${s.name || 'Techverse Solution'}</h1>
-            ${s.address ? `<div style="color:#555">${s.address}</div>`:''}
-            ${s.contact ? `<div style="color:#555">${s.contact}</div>`:''}
+            ${s.address ? <div style="color:#555">${s.address}</div>:''}
+            ${s.contact ? <div style="color:#555">${s.contact}</div>:''}
           </div>
           <div class="invoice-details">
             <div>
@@ -985,7 +868,7 @@
             </div>
             <div style="text-align:right;">
               <strong>Customer:</strong> ${t.customerName || 'Walk-in'}<br>
-              ${t.customerPhone ? `<strong>Phone:</strong> ${t.customerPhone}<br>`:''}
+              ${t.customerPhone ? <strong>Phone:</strong> ${t.customerPhone}<br>:''}
               <strong>Total Amount</strong><br>
               <span style="font-size:22px;color:#2563eb;">₹${Number(t.total||0).toFixed(2)}</span>
             </div>
@@ -1026,7 +909,7 @@
         if(type==='products') data = products;
         if(type==='customers') data = customers;
         if(type==='transactions') data = transactions;
-        downloadJson(data, `techverse_${type}.json`);
+        downloadJson(data, techverse_${type}.json);
         showToast('Data exported');
       }catch(e){ showToast('Export error: '+(e.message||e),'error'); }
     }
@@ -1071,8 +954,8 @@
 
     /* ===== INIT ===== */
     document.addEventListener('DOMContentLoaded', ()=>{
-      if(SESSION.loggedIn){ showApp(); } else { showLogin(); }
-      // default GST in POS when app first opens after login
+      showApp();
+      // default GST in POS when app first opens
       $('taxPercent').value = settings.gst || 0;
     });
   </script>
