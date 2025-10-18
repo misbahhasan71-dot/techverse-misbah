@@ -112,6 +112,10 @@
     </div>
 
     <button class="btn btn-primary" id="loginBtn">Login</button>
+<button class="btn btn-secondary" id="googleLoginBtn" style="margin-top:10px;width:100%;">
+  🔥 Login with Google
+</button>
+
   </div>
 </div>
 
@@ -479,6 +483,39 @@ $('loginBtn').addEventListener('click', async () => {
     }
   }
 });
+    // ===== Google Login (Only for existing users) =====
+$('googleLoginBtn').addEventListener('click', async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    // Ask user to choose their Google account
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    const email = user.email;
+
+    // Check if email is already registered in Firebase Auth
+    const methods = await auth.fetchSignInMethodsForEmail(email);
+
+    if (methods.length === 0) {
+      // User not registered, sign them out and show error
+      await auth.signOut();
+      showToast('🚫 This Google account is not registered. Please contact admin.', 'error');
+      return;
+    }
+
+    // ✅ Registered user
+    showToast(`✅ Welcome back, ${user.displayName || user.email}`);
+    console.log("Google login success:", email);
+
+  } catch (err) {
+    console.error("Google Login Error:", err);
+    if (err.code === 'auth/popup-closed-by-user') {
+      showToast('Popup closed before completing sign in', 'error');
+    } else {
+      showToast(err.message || 'Google login failed', 'error');
+    }
+  }
+});
+
 
     // Attempt login
     await auth.signInWithEmailAndPassword(email, pass);
