@@ -102,10 +102,13 @@
         <label>Email</label>
         <input type="email" id="loginEmail" placeholder="you@example.com">
       </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="********">
-      </div>
+     <div class="form-group" style="position: relative;">
+  <label>Password</label>
+  <input type="password" id="loginPassword" placeholder="********" style="padding-right: 40px;">
+  <span id="togglePassword" 
+        style="position:absolute; right:12px; top:42px; cursor:pointer; color:#666; font-size:18px;">👁️</span>
+</div>
+
 <div class="form-group">
  
 </div>
@@ -113,6 +116,15 @@
 
     </div>
   </div>
+
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("loginPassword");
+
+togglePassword.addEventListener("click", () => {
+  const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+  passwordInput.setAttribute("type", type);
+  togglePassword.textContent = type === "password" ? "👁️" : "🙈";
+});
 
   <!-- APP -->
   <div id="appContainer" class="app-container">
@@ -451,16 +463,31 @@
   }
 // ===== Auth (Login only) =====
 $('loginBtn').addEventListener('click', async () => {
-  const recaptchaResponse = grecaptcha.getResponse();
-  if (!recaptchaResponse) {
-    showToast('Please complete the reCAPTCHA check', 'error');
-    return;
-  }
-
   const email = $('loginEmail').value.trim();
   const pass = $('loginPassword').value.trim();
 
+  if (!email || !pass) {
+    showToast('Please enter email and password', 'error');
+    return;
+  }
+
   try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    showToast('✅ Login successful! Redirecting...');
+  } catch (err) {
+    console.error("Login Error:", err);
+    if (err.code === 'auth/user-not-found') {
+      showToast('❌ No account found with this email. Please contact admin.', 'error');
+    } else if (err.code === 'auth/wrong-password') {
+      showToast('⚠️ Incorrect password.', 'error');
+    } else if (err.code === 'auth/invalid-email') {
+      showToast('📧 Invalid email format.', 'error');
+    } else {
+      showToast(err.message || 'Login failed', 'error');
+    }
+  }
+});
+
     // Attempt login
     await auth.signInWithEmailAndPassword(email, pass);
     showToast('✅ Login successful! Redirecting...');
@@ -1200,7 +1227,5 @@ function loadDashboard() {
     });
   </script>
 
-  <!-- reCAPTCHA (optional, you can comment it if not used) -->
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
